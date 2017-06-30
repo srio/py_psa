@@ -3,46 +3,40 @@ from numpy import exp
 from numpy import pi
 from numpy import sqrt
 from numpy import log
+import numpy.testing as nut
 
 #Definition of the transformation matrices
-    # For a flight path of length
-def MatFlight(L):
+
+def MatFlight(L):                                                   # For a flight path of length
     return np.array([[1,-L,0],[0,1,0],[0,0,1]])
 
-    # For the first monochromator (?)
-    # MatFirstMono=np.array([[c,0,0],[0,1,0],[0,0,1]])
+def MatFirstMono(c):
+    return np.array([[c,0,0],[0,1,0],[0,0,1]])                    #For the first monochromator
 
-    # For a perfect flat crystal monochromator
-def MatFlatMono(b, ThetaB):
-    return np.array([[b,0,0],[0,1/b,(1-1/b)*np.tan(ThetaB)],[0,0,1]])
+def MatFlatMono(b,c, ThetaB):                                         # For a perfect flat crystal monochromator
+    return np.array([[b*c,0,0],[0,1/b,(1-1/b)*np.tan(ThetaB)],[0,0,1]])
 
-    # For a perfect curved crystal monochromator (meridionally and sagitally focusing)
-def MatCurvMono(b, Fc, ThetaB):
-    return np.array([[b,0,0],[1/Fc,1/b,(1-1/b)*np.tan(ThetaB)],[0,0,1]])
+def MatCurvMono(b, Fc, ThetaB, c):                                     # For a perfect curved crystal monochromator (meridionally and sagitally focusing)
+    return np.array([[b*c,0,0],[1/Fc,1/b,(1-1/b)*np.tan(ThetaB)],[0,0,1]])
 
-    # For a mosaic monochromator
-def MatMosMono(ThetaB):
-    return np.array([[1,0,0],[0,-1,2*np.tan(ThetaB)],[0,0,1]])
+def MatMosMono(ThetaB, c):                                             # For a mosaic monochromator
+    return np.array([[c,0,0],[0,-1,2*np.tan(ThetaB)],[0,0,1]])
 
-    # For the plane mirror
-def MatFlatMirr(IncAng, Sigma, Lambda, Delta):
+def MatFlatMirr(IncAng, Sigma, Lambda, Delta):                      # For the plane mirror
     return exp(-(4*pi*np.sin(IncAng)*Sigma/Lambda)**2)*np.array([[1,0,0],[Delta,1,0],[0,0,1]])
 
-    # For the bent and toroidal mirrors
-def MatMirr(IncAng, Sigma, Lambda, Delta, Fm):
+def MatMirr(IncAng, Sigma, Lambda, Delta, Fm):                      # For the bent and toroidal mirrors
     return exp(-(4*pi*np.sin(IncAng)*Sigma/Lambda)**2)*np.array([[1,0,0],[(1+S*Fm*Delta)/Fm,1,0],[0,0,1]])
 
-    # For the compound refractive lenses with parabolic holes
-def MatParaLens(F):
+def MatParaLens(F):                                                 # For the compound refractive lenses with parabolic holes
     return np.array([[1,0,0],[1/F,1,0],[0,0,1]])
 
-    # For the compound refractive lenses with circular holes
-def MatCircLens(Coef, F):
+def MatCircLens(Coef, F):                                           # For the compound refractive lenses with circular holes
     return np.array([[1,0,0],[Coef/F,1,0],[0,0,1]])
 
-    # For the multilayer
-def MatMulti(Fmu):
+def MatMulti(Fmu):                                                  # For the multilayer
     return np.array([[1,0,0],[exp(1)/Fmu,1,0],[0,0,1]])
+
 
 #Definition of the beam source
 
@@ -55,7 +49,6 @@ def SourceLambda(DLambda, Lambda, SigmaSourceLambda):
 
 #Definition of the acceptance windows of the optical parts
 
-    #cotan
 def cotan(x):
     return 1/np.tan(x)
 
@@ -107,4 +100,49 @@ def AccMultAng(Rml, yp, y, Rowland, ThetaML, DeltaLambda, Lambda, Ws):
 def AccMultWav(DeltaLambda,Lambda, SigmaSource, DistanceFromSource, Ws, ThetaML):
     return sqrt(6/pi) * exp( -(DeltaLambda/Lambda)**2/2/((SigmaSource/DistanceFromSource)**2+Ws**2/8/log(2))/cotan(ThetaML)**2)
 
+#Testing the functions
 
+def testMatFlatMono():
+    print(">> MatFlatMono in test")
+    b=0.8
+    c=0.25
+    ThetaB=1.0
+    Mat=np.array([[0.2,0,0],[0,1.25,-0.389352],[0,0,1]])
+    print(Mat.shape)
+    result = MatFlatMono(b,c,ThetaB)
+    print("Mistakes ?", nut.assert_array_almost_equal(Mat, result, decimal=5))
+print(testMatFlatMono())
+
+def testMatCurvMono():
+    print(">> MatCurvMono in test")
+    b = 0.8
+    Fc = 2
+    c = 0.25
+    ThetaB = 1.0
+    Mat = np.array([[0.2, 0, 0], [0.5, 1.25, -0.389352], [0, 0, 1]])
+    print(Mat.shape)
+    result = MatCurvMono(b, Fc, ThetaB, c)
+    print("Mistakes ?", nut.assert_array_almost_equal(Mat, result, decimal=5))
+print(testMatCurvMono())
+
+def testMatMosMono():
+    print(">> MatMosMono in test")
+    c = 0.25
+    ThetaB = 1.0
+    Mat = np.array([[0.25, 0, 0], [0, -1, 2*np.tan(1)], [0, 0, 1]])
+    print(Mat.shape)
+    result = MatMosMono(ThetaB, c)
+    print("Mistakes ?", nut.assert_array_almost_equal(Mat, result, decimal=5))
+print(testMatMosMono())
+
+def testMatFlatMirr():
+    print(">> MatFlatMirr in test")
+    Sigma = 0.02
+    IncAng = 30
+    Lambda = 1
+    Delta = 5
+    Mat = np.array([[0.9402, 0, 0], [4.701, 0.9402, 0], [0, 0, 0.9402]])
+    print(Mat.shape)
+    result = MatFlatMirr(IncAng, Sigma, Lambda, Delta)
+    print("Mistakes ?", nut.assert_array_almost_equal(Mat, result, decimal=5))
+print(testMatFlatMirr())

@@ -1,0 +1,44 @@
+Standard values for the beam source
+    SigmaX : 0.1 mm
+    SigmaX': 3e-5 rad
+    SigmaY : 0.01 mm
+    SigmaY': 1e-4 rad
+    Elec beam emittance : 0
+    SigmaLamdba : 1e-3
+    Center intensity : 1e25 SI
+    Energy : 11 keV
+
+Distance from source : 30000mm
+Item position : 10000mm
+
+Monochromator
+
+Standard values :
+    Alpha : 0
+    Crystal : Si
+    Wd : 1e-6 rad
+    Rmono : 0.96
+    Dimensions : 20 mm
+    Rint : 1e-5 rad
+
+Results for single vertical monochromator :
+    Flux = 5.61078e10 photon/s
+    FWHMx = 2.13238 mm
+    FWHMy = 4.65870 mm
+    FWHMx' = 70.644600 mrad
+    FWHMy' = 155.28800 mrad
+    FWMHlambda = 8.499200e-4
+Results for single horizontal monochromator :
+    Flux = 1.40101e9 photon/s
+    FWHMx = 0.238406 mm
+    FWHMy = 0.235275 mm
+    FWHMx' = 0.96123700 mrad
+    FWHMy' = 0.96131800 mrad
+    FWMHlambda =2.602800e-4
+
+    Flux = photon/s
+    FWHMx = mm
+    FWHMy = mm
+    FWHMx' =  mrad
+    FWHMy' = mrad
+    FWMHlambda =
