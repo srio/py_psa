@@ -5,7 +5,11 @@ from numpy import sqrt
 from numpy import log
 import numpy.testing as nut
 
-#Definition of the transformation matrices
+
+#Definition of mathematical objects
+
+
+    #Definition of the transformation matrices
 
 def MatFlight(L):                                                   # For a flight path of length
     return np.array([[1,-L,0],[0,1,0],[0,0,1]])
@@ -37,8 +41,7 @@ def MatCircLens(Coef, F):                                           # For the co
 def MatMulti(Fmu):                                                  # For the multilayer
     return np.array([[1,0,0],[1/Fmu,1,0],[0,0,1]])
 
-
-#Definition of the beam source
+    #Definition of the beam source
 
 def SourceX(x, xp, SigmaSourceX=1e-6, SigmaSourceXp=2e-6):
     return exp(-( (x/SigmaSourceX)**2 + (xp/SigmaSourceXp)**2) / 2 )
@@ -47,7 +50,7 @@ def SourceY(y, yp, SigmaSourceY=1e-6, SigmaSourceYp=2e-6, GammaSource=5e-5):
 def SourceLambda(DeltaLambda, SigmaSourceLambda=1e-6):
     return exp(-(DeltaLambda)**2/2/SigmaSourceLambda**2)
 
-#Definition of the acceptance windows of the optical parts
+    #Definition of the acceptance windows of the optical parts
 
 def cotan(x):
     return 1/np.tan(x)
@@ -368,3 +371,6 @@ def testAccMultWav():
     print(Acceptance, result)
     print("Mistakes ?", nut.assert_almost_equal(Acceptance, result, decimal=5))
 print(testAccMultWav())
+
+
+#
