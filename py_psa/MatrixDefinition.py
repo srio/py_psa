@@ -4,7 +4,9 @@ from numpy import pi
 from numpy import sqrt
 from numpy import log
 import numpy.testing as nut
+import sympy as sp
 
+x, xp, y, yp, dl = sp.symbols('x xp y yp dl')
 
 #Definition of mathematical objects
 
@@ -44,11 +46,11 @@ def MatMulti(Fmu):                                                  # For the mu
     #Definition of the beam source
 
 def SourceX(x, xp, SigmaSourceX=1e-6, SigmaSourceXp=2e-6):
-    return exp(-( (x/SigmaSourceX)**2 + (xp/SigmaSourceXp)**2) / 2 )
+    return sp.exp(-( (x/SigmaSourceX)**2 + (xp/SigmaSourceXp)**2) / 2 )
 def SourceY(y, yp, SigmaSourceY=1e-6, SigmaSourceYp=2e-6, GammaSource=5e-5):
-    return exp( -( (y/SigmaSourceY)**2 + ((yp-GammaSource*y)/SigmaSourceYp)**2)/2 )
+    return sp.exp( -( (y/SigmaSourceY)**2 + ((yp-GammaSource*y)/SigmaSourceYp)**2)/2 )
 def SourceLambda(DeltaLambda, SigmaSourceLambda=1e-6):
-    return exp(-(DeltaLambda)**2/2/SigmaSourceLambda**2)
+    return sp.exp(-(DeltaLambda)**2/2/SigmaSourceLambda**2)
 
     #Definition of the acceptance windows of the optical parts
 
@@ -373,4 +375,30 @@ def testAccMultWav():
 print(testAccMultWav())
 
 
-#
+#Single monochromator example
+# number of elements in the device : n
+z0 = 10000
+z1 = 12000
+Flight_paths_in_order = [z0,z1]
+AperturSlitX0 = 2
+AperturSlitY0 = 3
+Slit = [AperturSlitX0, AperturSlitY0, np.ones((3, 3))]
+MatTab = [MatFlight(z0), Slit[2], MatFlight(z1)]
+
+def MatCreation():
+    MatTempX = np.array([x,xp,dl])
+    MatTempY = np.array([y, yp, dl])
+    for i in range(len(MatTab)-1,0,-1):
+        MatTempX = np.dot(MatTab[i],MatTempX)
+        MatTempY = np.dot(MatTab[i], MatTempY)
+    return [MatTempX,MatTempY]
+print(MatCreation()[1], np.shape(MatCreation()[0]),np.shape(MatCreation()[1]))
+
+def NewSource():
+    MatTempX = MatCreation()[0]
+    MatTempY = MatCreation()[1]
+    NewSourceX = SourceX(MatTempX[0], MatTempX[1])
+    NewSourceY = SourceY(MatTempY[0], MatTempY[1])
+    return [NewSourceX, NewSourceY]
+print(NewSource())
+
