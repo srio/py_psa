@@ -5,6 +5,7 @@ from numpy import sqrt
 from numpy import log
 import numpy.testing as nut
 import sympy as sp
+from sympy.integrals.quadrature import gauss_hermite
 
 
 x, xp, y, yp, dl = sp.symbols('x xp y yp dl')
@@ -416,23 +417,25 @@ def NewSource2():
     return [NewSourceX, NewSourceY]
 print(">>>>>>", NewSource2())
 
-    #Integrations
-    #First integrations
+
+# Integrations
+# Beam Size
+
 def IntegralXXP(x, xp):
-    NewSourceX=NewSource2()[0]
-    if sp.diff(NewSourceX, dl)==0:
+    NewSourceX = NewSource2()[0]
+    if sp.diff(NewSourceX, dl) == 0:
         return 1
     else:
-        return sp.integrate(NewSourceX, (dl, -np.inf, np.inf ))
+        return sp.integrate(NewSourceX, (dl, -np.inf, np.inf))
 print(IntegralXXP(x, xp))
 
-def IntegralYYP(y,yp):
-    NewSourceY=NewSource2()[1]
-    if sp.diff(NewSourceY, dl)==0:
+def IntegralYYP(y, yp):
+    NewSourceY = NewSource2()[1]
+    if sp.diff(NewSourceY, dl) == 0:
         return 1
     else:
         return sp.integrate(NewSourceY, (dl, -np.inf, np.inf))
-print(IntegralYYP(y,yp))
+print(IntegralYYP(y, yp))
 
 def IntegralXYXPYP(x, xp, y, yp):
     SourceI = 6*10^20
@@ -441,4 +444,75 @@ def IntegralXYXPYP(x, xp, y, yp):
         return 1
     else:
         return sp.integrate(Beam, (dl, -np.inf, np.inf))
-print(IntegralXYXPYP(x, xp, y, yp))
+# print(IntegralXYXPYP(x, xp, y, yp))
+
+def IntegralXYXP(x,xp,y, n,    n_digits):
+    if sp.diff(IntegralXYXPYP(x, xp, y, yp), yp) == 0:
+        return 1
+    else:
+        v, w = gauss_hermite(n, n_digits)
+        result = 0
+        for i in range(n):
+            result = result + w[i] * IntegralXYXPYP(x, xp, y, yp).subs(yp, v[i])
+        return result
+# print(IntegralXYXP(x, xp, y, 8, 3))
+
+def IntegralXY(x, y, n, n_digits):
+    if sp.diff(IntegralXYXP(x, xp, y, n, n_digits), xp) == 0:
+        return 1
+    else:
+        v, w = gauss_hermite(n, n_digits)
+        Int = IntegralXYXP(x, xp, y, n, n_digits)
+        result = 0
+        for i in range(n):
+            result = result + w[i] * Int.subs(xp, v[i])
+        return result
+# print(IntegralXY(x, y, 5, 2))
+
+def BeamGeoSize(n , n_digits):
+    FunctionX = IntegralXY(x, y, n, n_digits).subs(y, 0)                     #todo check the minus in sigma
+    FunctionY = IntegralXY(x, y, n, n_digits).subs(x, 0)
+    ValueAX = FunctionX.subs(x, 0)
+    ValueAY = FunctionY.subs(y, 0)
+    ValueExponentX = FunctionX.subs(x, 10^-6)
+    ValueExponentY = FunctionY.subs(y, 10^-6)
+    SigmaX = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10^-4)/sp.log(ValueExponentX/ValueAX))
+    SigmaY = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10^-4)/sp.log(ValueExponentY/ValueAY))
+    return [SigmaX, SigmaY]
+# print(BeamGeoSize())
+
+# Angle size of the beam
+
+def IntegralXXPYP(n, n_digits):
+    if sp.diff(IntegralXYXPYP(x, xp, y, yp), y) == 0:
+        return 1
+    else:
+        v, w = gauss_hermite(n, n_digits)
+        result = 0
+        for i in range(n):
+            result = result + w[i] * IntegralXYXPYP(x, xp, y, yp).subs(y, v[i])
+        return result
+# print(IntegralXYXP(x, xp, y, 8, 3))
+
+def IntegralXPYP(n, n_digits):
+    if sp.diff(IntegralXXPYP(n, n_digits), x) == 0:
+        return 1
+    else:
+        v, w = gauss_hermite(n, n_digits)
+        result = 0
+        for i in range(n):
+            result = result + w[i] * IntegralXXPYP(n, n_digits).subs(x, v[i])
+        return result
+print(IntegralXPYP(5,2))
+
+def AngularBeamSize(n, n_digits):
+    FunctionXP = IntegralXPYP(n, n_digits).subs(yp,0)
+    FunctionYP = IntegralXPYP(n, n_digits).subs(xp,0)
+    ValueAXP = FunctionXP.subs(xp,0)
+    ValueAYP = FunctionYP.subs(yp,0)
+    ValueExponentXP = FunctionXP.subs(xp, 10^-6)
+    ValueExponentYP = FunctionYP.subs(yp, 10^-6)
+    SigmaXP = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10^-4)/sp.log(ValueExponentXP/ValueAXP)/10^-12)
+    SigmaYP = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10^-4)/sp.log(ValueExponentYP/ValueAYP)/10^-12)
+    return [SigmaXP, SigmaYP]
+print(AngularBeamSize(4,2))
