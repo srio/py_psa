@@ -6,6 +6,7 @@ from numpy import log
 import numpy.testing as nut
 import sympy as sp
 
+
 x, xp, y, yp, dl = sp.symbols('x xp y yp dl')
 
 #Definition of mathematical objects
@@ -16,17 +17,14 @@ x, xp, y, yp, dl = sp.symbols('x xp y yp dl')
 def MatFlight(L):                                                   # For a flight path of length
     return np.array([[1,-L,0],[0,1,0],[0,0,1]])
 
-def MatFirstMono(c):
-    return np.array([[c,0,0],[0,1,0],[0,0,1]])                    #For the first monochromator
+def MatFlatMono(b, ThetaB):                                         # For a perfect flat crystal monochromator
+    return np.array([[b,0,0],[0,1/b,(1-1/b)*np.tan(ThetaB)],[0,0,1]])
 
-def MatFlatMono(b,c, ThetaB):                                         # For a perfect flat crystal monochromator
-    return np.array([[b*c,0,0],[0,1/b,(1-1/b)*np.tan(ThetaB)],[0,0,1]])
+def MatCurvMono(b, Fc, ThetaB):                                     # For a perfect curved crystal monochromator (meridionally and sagitally focusing)
+    return np.array([[b,0,0],[1/Fc,1/b,(1-1/b)*np.tan(ThetaB)],[0,0,1]])
 
-def MatCurvMono(b, Fc, ThetaB, c):                                     # For a perfect curved crystal monochromator (meridionally and sagitally focusing)
-    return np.array([[b*c,0,0],[1/Fc,1/b,(1-1/b)*np.tan(ThetaB)],[0,0,1]])
-
-def MatMosMono(ThetaB, c):                                             # For a mosaic monochromator
-    return np.array([[c,0,0],[0,-1,2*np.tan(ThetaB)],[0,0,1]])
+def MatMosMono(ThetaB):                                             # For a mosaic monochromator
+    return np.array([[1,0,0],[0,-1,2*np.tan(ThetaB)],[0,0,1]])
 
 def MatFlatMirr(IncAng, Sigma, Lambda, Delta):                      # For the plane mirror
     return exp(-(4*pi*np.sin(IncAng)*Sigma/Lambda)**2)*np.array([[1,0,0],[Delta,1,0],[0,0,1]])
@@ -49,16 +47,21 @@ def SourceX(x, xp, SigmaSourceX=1e-6, SigmaSourceXp=2e-6):
     return sp.exp(-( (x/SigmaSourceX)**2 + (xp/SigmaSourceXp)**2) / 2 )
 def SourceY(y, yp, SigmaSourceY=1e-6, SigmaSourceYp=2e-6, GammaSource=5e-5):
     return sp.exp( -( (y/SigmaSourceY)**2 + ((yp-GammaSource*y)/SigmaSourceYp)**2)/2 )
-def SourceLambda(DeltaLambda, SigmaSourceLambda=1e-6):
-    return sp.exp(-(DeltaLambda)**2/2/SigmaSourceLambda**2)
+def SourceLambda(dl, SigmaSLambda=1e-6):
+    return sp.exp(-(dl)**2/2/SigmaSLambda**2)
 
     #Definition of the acceptance windows of the optical parts
 
 def cotan(x):
     return 1/np.tan(x)
 
-def AccSlit(y, Aperture):                                                           #Slit acceptance
-    return sqrt(6/pi) / sqrt(6*log(2)/pi) * exp( -(y/Aperture)**2/2*12)
+def AccSlit(y, Aperture, calctype):                                                           #Slit acceptance
+    if calctype==0:
+        return sqrt(6/pi) / sqrt(6*log(2)/pi) * sp.exp( -(y/Aperture)**2/2*12)
+    if calctype==1:
+        return 1/sqrt(6*log(2)/pi)*sp.exp(-y**2/(2*Aperture**2/2/pi))
+    else:
+        return 'the value for calctype is 0 or 1 you pipsqueak !'
 
 def AccPinh(y, Diameter):                                                            #Pinhole acceptance
     return sqrt(8/pi) * exp ( -(y/Diameter)**2/2*16 )
@@ -102,11 +105,10 @@ def AccMultWav(DeltaLambda, SigmaSource, DistanceFromSource, Ws, ThetaML):     #
 def testMatFlatMono():
     print(">> MatFlatMono in test")
     b=0.8
-    c=0.25
     ThetaB=1.0
-    Mat=np.array([[0.2,0,0],[0,1.25,-0.389352],[0,0,1]])
+    Mat=np.array([[0.8,0,0],[0,1.25,-0.389352],[0,0,1]])
     print(Mat.shape)
-    result = MatFlatMono(b,c,ThetaB)
+    result = MatFlatMono(b,ThetaB)
     print("Mistakes ?", nut.assert_array_almost_equal(Mat, result, decimal=5))
 print(testMatFlatMono())
 
@@ -114,21 +116,19 @@ def testMatCurvMono():
     print(">> MatCurvMono in test")
     b = 0.8
     Fc = 2
-    c = 0.25
     ThetaB = 1.0
-    Mat = np.array([[0.2, 0, 0], [0.5, 1.25, -0.389352], [0, 0, 1]])
+    Mat = np.array([[0.8, 0, 0], [0.5, 1.25, -0.389352], [0, 0, 1]])
     print(Mat.shape)
-    result = MatCurvMono(b, Fc, ThetaB, c)
+    result = MatCurvMono(b, Fc, ThetaB)
     print("Mistakes ?", nut.assert_array_almost_equal(Mat, result, decimal=5))
 print(testMatCurvMono())
 
 def testMatMosMono():
     print(">> MatMosMono in test")
-    c = 0.25
     ThetaB = 1.0
-    Mat = np.array([[0.25, 0, 0], [0, -1, 2*np.tan(1)], [0, 0, 1]])
+    Mat = np.array([[1, 0, 0], [0, -1, 2*np.tan(1)], [0, 0, 1]])
     print(Mat.shape)
-    result = MatMosMono(ThetaB, c)
+    result = MatMosMono(ThetaB)
     print("Mistakes ?", nut.assert_array_almost_equal(Mat, result, decimal=5))
 print(testMatMosMono())
 
@@ -212,7 +212,7 @@ def testSourceLambda():
     print(">> SourceLambda in test")
     DeltaLambda = 4
     Source = 0.278037
-    result = SourceLambda(DeltaLambda, SigmaSourceLambda=2.5)
+    result = SourceLambda(DeltaLambda, SigmaSLambda=2.5)
     print(Source, result)
     print("Mistakes ?", nut.assert_almost_equal(Source, result, decimal=5))
 print(testSourceLambda())
@@ -224,9 +224,13 @@ def testAccSlit():
     y = 2
     Aperture = 75
     Acceptance = 1.19601
-    result = AccSlit(y, Aperture)
+    result = AccSlit(y, Aperture, 0)
     print(Acceptance, result)
     print("Mistakes ?", nut.assert_almost_equal(Acceptance, result, decimal=5))
+    result2 = AccSlit(y, Aperture, 1)
+    Acceptance2=0.867194
+    print(Acceptance2, result2)
+    print("Mistakes ?", nut.assert_almost_equal(Acceptance2, result2, decimal=5))
 print(testAccSlit())
 
 def testAccPinh():
@@ -375,14 +379,15 @@ def testAccMultWav():
 print(testAccMultWav())
 
 
-#Single monochromator example
+#Single slit example
 # number of elements in the device : n
+
 z0 = 10000
 z1 = 12000
 Flight_paths_in_order = [z0,z1]
 AperturSlitX0 = 2
 AperturSlitY0 = 3
-Slit = [AperturSlitX0, AperturSlitY0, np.ones((3, 3))]
+Slit = [AperturSlitX0, AperturSlitY0, np.ones((3, 3)), 0]
 MatTab = [MatFlight(z0), Slit[2], MatFlight(z1)]
 
 def MatCreation():
@@ -392,7 +397,7 @@ def MatCreation():
         MatTempX = np.dot(MatTab[i],MatTempX)
         MatTempY = np.dot(MatTab[i], MatTempY)
     return [MatTempX,MatTempY]
-print(MatCreation()[1], np.shape(MatCreation()[0]),np.shape(MatCreation()[1]))
+print(">>>>>>>" , MatCreation()[1], np.shape(MatCreation()[0]),np.shape(MatCreation()[1]))
 
 def NewSource():
     MatTempX = MatCreation()[0]
@@ -402,3 +407,38 @@ def NewSource():
     return [NewSourceX, NewSourceY]
 print(NewSource())
 
+del MatTab[0:2]
+MatCreation()
+
+def NewSource2():
+    NewSourceX = NewSource()[0]*AccSlit(MatCreation()[0][0], Slit[0], Slit[3])
+    NewSourceY = NewSource()[1]*AccSlit(MatCreation()[1][0], Slit[1], Slit[3])
+    return [NewSourceX, NewSourceY]
+print(">>>>>>", NewSource2())
+
+    #Integrations
+    #First integrations
+def IntegralXXP(x, xp):
+    NewSourceX=NewSource2()[0]
+    if sp.diff(NewSourceX, dl)==0:
+        return 1
+    else:
+        return sp.integrate(NewSourceX, (dl, -np.inf, np.inf ))
+print(IntegralXXP(x, xp))
+
+def IntegralYYP(y,yp):
+    NewSourceY=NewSource2()[1]
+    if sp.diff(NewSourceY, dl)==0:
+        return 1
+    else:
+        return sp.integrate(NewSourceY, (dl, -np.inf, np.inf))
+print(IntegralYYP(y,yp))
+
+def IntegralXYXPYP(x, xp, y, yp):
+    SourceI = 6*10^20
+    Beam = NewSource2()[0]*NewSource2()[1]*SourceLambda(dl, SigmaSLambda=1e-6)*SourceI
+    if sp.diff(Beam, dl)==0:
+        return 1
+    else:
+        return sp.integrate(Beam, (dl, -np.inf, np.inf))
+print(IntegralXYXPYP(x, xp, y, yp))
