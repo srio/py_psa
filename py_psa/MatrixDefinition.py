@@ -476,8 +476,8 @@ def BeamGeoSize(n , n_digits):
     ValueAY = FunctionY.subs(y, 0)
     ValueExponentX = FunctionX.subs(x, 10^-6)
     ValueExponentY = FunctionY.subs(y, 10^-6)
-    SigmaX = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10^-4)/sp.log(ValueExponentX/ValueAX))
-    SigmaY = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10^-4)/sp.log(ValueExponentY/ValueAY))
+    SigmaX = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10**-4)/sp.log(ValueExponentX/ValueAX))
+    SigmaY = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10**-4)/sp.log(ValueExponentY/ValueAY))
     return [SigmaX, SigmaY]
 # print(BeamGeoSize())
 
@@ -512,7 +512,7 @@ def AngularBeamSize(n, n_digits):
     ValueAYP = FunctionYP.subs(yp,0)
     ValueExponentXP = FunctionXP.subs(xp, 10^-6)
     ValueExponentYP = FunctionYP.subs(yp, 10^-6)
-    SigmaXP = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10^-4)/sp.log(ValueExponentXP/ValueAXP)/10^-12)
-    SigmaYP = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10^-4)/sp.log(ValueExponentYP/ValueAYP)/10^-12)
+    SigmaXP = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10**-4)/sp.log(ValueExponentXP/ValueAXP)/10**-12)
+    SigmaYP = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10**-4)/sp.log(ValueExponentYP/ValueAYP)/10**-12)
     return [SigmaXP, SigmaYP]
 print(AngularBeamSize(4,2))
