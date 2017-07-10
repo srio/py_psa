@@ -5,7 +5,8 @@ from numpy import sqrt
 from numpy import log
 import numpy.testing as nut
 import sympy as sp
-from sympy.integrals.quadrature import gauss_hermite
+import scipy.integrate as si
+import mpmath as mp
 
 
 x, xp, y, yp, dl = sp.symbols('x xp y yp dl')
@@ -391,31 +392,31 @@ AperturSlitY0 = 3
 Slit = [AperturSlitX0, AperturSlitY0, np.ones((3, 3)), 0]
 MatTab = [MatFlight(z0), Slit[2], MatFlight(z1)]
 
-def MatCreation():
+def MatCreation(x, y, xp, yp, dl):
     MatTempX = np.array([x,xp,dl])
     MatTempY = np.array([y, yp, dl])
     for i in range(len(MatTab)-1,0,-1):
         MatTempX = np.dot(MatTab[i],MatTempX)
         MatTempY = np.dot(MatTab[i], MatTempY)
     return [MatTempX,MatTempY]
-print(">>>>>>>" , MatCreation()[1], np.shape(MatCreation()[0]),np.shape(MatCreation()[1]))
+print(">>>>>>>" , MatCreation(x, y, xp, yp, dl)[1], np.shape(MatCreation(x, y, xp, yp, dl)[0]),np.shape(MatCreation(x, y, xp, yp, dl)[1]))
 
-def NewSource():
-    MatTempX = MatCreation()[0]
-    MatTempY = MatCreation()[1]
+def NewSource(x, xp, y, yp, dl):
+    MatTempX = MatCreation(x, y, xp, yp, dl)[0]
+    MatTempY = MatCreation(x, y, xp, yp, dl)[1]
     NewSourceX = SourceX(MatTempX[0], MatTempX[1])
     NewSourceY = SourceY(MatTempY[0], MatTempY[1])
     return [NewSourceX, NewSourceY]
-print(NewSource())
+print(NewSource(x, y, xp, yp, dl))
 
 del MatTab[0:2]
-MatCreation()
+MatCreation(x, y, xp, yp, dl)
 
-def NewSource2():
-    NewSourceX = NewSource()[0]*AccSlit(MatCreation()[0][0], Slit[0], Slit[3])
-    NewSourceY = NewSource()[1]*AccSlit(MatCreation()[1][0], Slit[1], Slit[3])
+def NewSource2(x, y, xp, yp, dl):
+    NewSourceX = NewSource(x, y, xp, yp, dl)[0]*AccSlit(MatCreation(x, y, xp, yp, dl)[0][0], Slit[0], Slit[3])
+    NewSourceY = NewSource(x, y, xp, yp, dl)[1]*AccSlit(MatCreation(x, y, xp, yp, dl)[1][0], Slit[1], Slit[3])
     return [NewSourceX, NewSourceY]
-print(">>>>>>", NewSource2())
+print(">>>>>>", NewSource2(x, y, xp, yp, dl))
 
 
 # Integrations
@@ -450,23 +451,14 @@ def IntegralXYXP(x,xp,y, n,    n_digits):
     if sp.diff(IntegralXYXPYP(x, xp, y, yp), yp) == 0:
         return 1
     else:
-        v, w = gauss_hermite(n, n_digits)
-        result = 0
-        for i in range(n):
-            result = result + w[i] * IntegralXYXPYP(x, xp, y, yp).subs(yp, v[i])
-        return result
+
 # print(IntegralXYXP(x, xp, y, 8, 3))
 
 def IntegralXY(x, y, n, n_digits):
     if sp.diff(IntegralXYXP(x, xp, y, n, n_digits), xp) == 0:
         return 1
     else:
-        v, w = gauss_hermite(n, n_digits)
-        Int = IntegralXYXP(x, xp, y, n, n_digits)
-        result = 0
-        for i in range(n):
-            result = result + w[i] * Int.subs(xp, v[i])
-        return result
+        
 # print(IntegralXY(x, y, 5, 2))
 
 def BeamGeoSize(n , n_digits):
@@ -516,3 +508,26 @@ def AngularBeamSize(n, n_digits):
     SigmaYP = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10**-4)/sp.log(ValueExponentYP/ValueAYP)/10**-12)
     return [SigmaXP, SigmaYP]
 print(AngularBeamSize(4,2))
+
+#flux
+
+def Beam(x, y, xp, yp, dl):
+    SourceI = 6 * 10**20
+    return NewSource2(x, y, xp, yp, dl)[0]*NewSource2(x, y, xp, yp, dl)[1]*SourceLambda(dl, SigmaSLambda=1e-6)*SourceI
+
+def Beamdl(x, y, xp, yp):
+    dl = 2
+    return Beam(x, y, xp, yp, dl)
+
+def IntegralXYXPYPdl(dl):
+    if sp.diff(Beam(x, xp, y, yp, dl), x) == 0:
+        return 0
+    elif sp.diff(Beam(x, xp, y, yp, dl), y) == 0:
+        return 0
+    elif sp.diff(Beam(x, xp, y, yp, dl), xp) == 0:
+        return 0
+    elif sp.diff(Beam(x, xp, y, yp, dl), yp) == 0:
+        return 0
+    else:
+        return si.nquad(Beamdl, [[-np.inf, np.inf], [-np.inf, np.inf], [-np.inf, np.inf], [-np.inf, np.inf]])
+print(IntegralXYXPYPdl(1*10**-3))
