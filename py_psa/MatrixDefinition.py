@@ -7,7 +7,7 @@ import numpy.testing as nut
 import sympy as sp
 import scipy.integrate as si
 import mpmath as mp
-
+import sympy
 
 x, xp, y, yp, dl = sp.symbols('x xp y yp dl')
 
@@ -49,7 +49,7 @@ def SourceX(x, xp, SigmaSourceX=1e-6, SigmaSourceXp=2e-6):
     return sp.exp(-( (x/SigmaSourceX)**2 + (xp/SigmaSourceXp)**2) / 2 )
 def SourceY(y, yp, SigmaSourceY=1e-6, SigmaSourceYp=2e-6, GammaSource=5e-5):
     return sp.exp( -( (y/SigmaSourceY)**2 + ((yp-GammaSource*y)/SigmaSourceYp)**2)/2 )
-def SourceLambda(dl, SigmaSLambda=1e-6):
+def SourceLambda(dl, SigmaSLambda=1e-4):
     return sp.exp(-(dl)**2/2/SigmaSLambda**2)
 
     #Definition of the acceptance windows of the optical parts
@@ -387,147 +387,197 @@ print(testAccMultWav())
 z0 = 10000
 z1 = 12000
 Flight_paths_in_order = [z0,z1]
-AperturSlitX0 = 2
-AperturSlitY0 = 3
+AperturSlitX0 = 20
+AperturSlitY0 = 30
 Slit = [AperturSlitX0, AperturSlitY0, np.ones((3, 3)), 0]
 MatTab = [MatFlight(z0), Slit[2], MatFlight(z1)]
+dlBoundaries = [-10**-6,10**-6]
+CoefMonoX = 1
+CoefMonoY = 1
+CoefAtten = 1
 
-def MatCreation(x, y, xp, yp, dl):
+def MatCreation():
     MatTempX = np.array([x,xp,dl])
     MatTempY = np.array([y, yp, dl])
     for i in range(len(MatTab)-1,0,-1):
         MatTempX = np.dot(MatTab[i],MatTempX)
         MatTempY = np.dot(MatTab[i], MatTempY)
     return [MatTempX,MatTempY]
-print(">>>>>>>" , MatCreation(x, y, xp, yp, dl)[1], np.shape(MatCreation(x, y, xp, yp, dl)[0]),np.shape(MatCreation(x, y, xp, yp, dl)[1]))
+print(">>>>>>>" , MatCreation()[1], np.shape(MatCreation()[0]),np.shape(MatCreation()[1]))
 
-def NewSource(x, xp, y, yp, dl):
-    MatTempX = MatCreation(x, y, xp, yp, dl)[0]
-    MatTempY = MatCreation(x, y, xp, yp, dl)[1]
+def NewSource():
+    MatTempX = MatCreation()[0]
+    MatTempY = MatCreation()[1]
     NewSourceX = SourceX(MatTempX[0], MatTempX[1])
     NewSourceY = SourceY(MatTempY[0], MatTempY[1])
     return [NewSourceX, NewSourceY]
-print(NewSource(x, y, xp, yp, dl))
+print(NewSource())
 
 del MatTab[0:2]
-MatCreation(x, y, xp, yp, dl)
+MatCreation()
 
-def NewSource2(x, y, xp, yp, dl):
-    NewSourceX = NewSource(x, y, xp, yp, dl)[0]*AccSlit(MatCreation(x, y, xp, yp, dl)[0][0], Slit[0], Slit[3])
-    NewSourceY = NewSource(x, y, xp, yp, dl)[1]*AccSlit(MatCreation(x, y, xp, yp, dl)[1][0], Slit[1], Slit[3])
+def NewSource2():
+    NewSourceX = NewSource()[0]*AccSlit(MatCreation()[0][0], Slit[0], Slit[3])
+    NewSourceY = NewSource()[1]*AccSlit(MatCreation()[1][0], Slit[1], Slit[3])
     return [NewSourceX, NewSourceY]
-print(">>>>>>", NewSource2(x, y, xp, yp, dl))
-
+print(">>>>>>", NewSource2())
 
 # Integrations
 # Beam Size
 
-def IntegralXXP(x, xp):
-    NewSourceX = NewSource2()[0]
-    if sp.diff(NewSourceX, dl) == 0:
-        return 1
+# def IntegralXXP():
+#     NewSourceX = NewSource2()[0]
+#     if sp.diff(NewSourceX, dl) == 0:
+#         return 1
+#     else:
+#         return sp.integrate(NewSourceX, (dl, -np.inf, np.inf))
+# print(IntegralXXP())
+#
+# def IntegralYYP():
+#     NewSourceY = NewSource2()[1]
+#     if sp.diff(NewSourceY, dl) == 0:
+#         return 1
+#     else:
+#         return sp.integrate(NewSourceY, (dl, -np.inf, np.inf))
+# print(IntegralYYP())
+
+def BeamGeoSize():
+    SourceI = 6 * 10 ** 20
+    Ix = lambda up, ddl, u: NewSource2()[0].subs([(x, u), (xp, up), (dl, ddl)])
+    print('Ix is :', Ix(x, xp, dl))
+    Iy = lambda v, vp, ddl: NewSource2()[1].subs([(y, v), (yp, vp), (dl, ddl)])
+    if sp.diff(Ix(x, xp, dl), dl) == 0:
+        IYint = lambda vp, ddl, v: Iy(v, vp, ddl) * SourceLambda(ddl, SigmaSLambda=1e-4) * SourceI
+        IxIntegrated = si.nquad(Ix, [[-10 ** -6, 10 ** -6], [-10 ** -6, 10 ** -6]], args=(0,))[0]
+
+
+    elif sp.diff(Iy(x, xp, dl), dl) == 0:
+        IXint = lambda up, ddl, u: Ix(u, up, ddl) * SourceLambda(ddl, SigmaSLambda=1e-4) * SourceI
+
+
+
     else:
-        return sp.integrate(NewSourceX, (dl, -np.inf, np.inf))
-print(IntegralXXP(x, xp))
+        print("Computation time too long, DeltaLambda variation on both axis -> not possible")
+        return 0
 
-def IntegralYYP(y, yp):
-    NewSourceY = NewSource2()[1]
-    if sp.diff(NewSourceY, dl) == 0:
-        return 1
-    else:
-        return sp.integrate(NewSourceY, (dl, -np.inf, np.inf))
-print(IntegralYYP(y, yp))
 
-def IntegralXYXPYP(x, xp, y, yp):
-    SourceI = 6*10^20
-    Beam = NewSource2()[0]*NewSource2()[1]*SourceLambda(dl, SigmaSLambda=1e-6)*SourceI
-    if sp.diff(Beam, dl)==0:
-        return 1
-    else:
-        return sp.integrate(Beam, (dl, -np.inf, np.inf))
-# print(IntegralXYXPYP(x, xp, y, yp))
 
-def IntegralXYXP(x,xp,y, n,    n_digits):
-    if sp.diff(IntegralXYXPYP(x, xp, y, yp), yp) == 0:
-        return 1
-    else:
+# def IntegralXYXPYP(yp, xp):
+#     SourceI = 6*10^20
+#     Beam = NewSource2()[0]*NewSource2()[1]*SourceLambda(dl, SigmaSLambda=1e-6)*SourceI
+#     if sp.diff(Beam, dl)==0:
+#         return 1
+#     else:
+#         return sp.integrate(Beam, (dl, -np.inf, np.inf))
+# print(">>>>>>>>>>>>>", IntegralXYXPYP(yp, xp))
+#
+# def IntegralXYXP():
+#     if sp.diff(IntegralXYXPYP(yp, xp), yp) == 0:
+#         return 1
+#     else:
+#         return (sp.integrate(IntegralXYXPYP(yp, xp), -np.inf, np.inf, args=(xp,)))
+#
+# print(IntegralXYXP())
 
-# print(IntegralXYXP(x, xp, y, 8, 3))
-
-def IntegralXY(x, y, n, n_digits):
-    if sp.diff(IntegralXYXP(x, xp, y, n, n_digits), xp) == 0:
-        return 1
-    else:
-        
-# print(IntegralXY(x, y, 5, 2))
-
-def BeamGeoSize(n , n_digits):
-    FunctionX = IntegralXY(x, y, n, n_digits).subs(y, 0)                     #todo check the minus in sigma
-    FunctionY = IntegralXY(x, y, n, n_digits).subs(x, 0)
-    ValueAX = FunctionX.subs(x, 0)
-    ValueAY = FunctionY.subs(y, 0)
-    ValueExponentX = FunctionX.subs(x, 10^-6)
-    ValueExponentY = FunctionY.subs(y, 10^-6)
-    SigmaX = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10**-4)/sp.log(ValueExponentX/ValueAX))
-    SigmaY = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10**-4)/sp.log(ValueExponentY/ValueAY))
-    return [SigmaX, SigmaY]
-# print(BeamGeoSize())
-
-# Angle size of the beam
-
-def IntegralXXPYP(n, n_digits):
-    if sp.diff(IntegralXYXPYP(x, xp, y, yp), y) == 0:
-        return 1
-    else:
-        v, w = gauss_hermite(n, n_digits)
-        result = 0
-        for i in range(n):
-            result = result + w[i] * IntegralXYXPYP(x, xp, y, yp).subs(y, v[i])
-        return result
-# print(IntegralXYXP(x, xp, y, 8, 3))
-
-def IntegralXPYP(n, n_digits):
-    if sp.diff(IntegralXXPYP(n, n_digits), x) == 0:
-        return 1
-    else:
-        v, w = gauss_hermite(n, n_digits)
-        result = 0
-        for i in range(n):
-            result = result + w[i] * IntegralXXPYP(n, n_digits).subs(x, v[i])
-        return result
-print(IntegralXPYP(5,2))
-
-def AngularBeamSize(n, n_digits):
-    FunctionXP = IntegralXPYP(n, n_digits).subs(yp,0)
-    FunctionYP = IntegralXPYP(n, n_digits).subs(xp,0)
-    ValueAXP = FunctionXP.subs(xp,0)
-    ValueAYP = FunctionYP.subs(yp,0)
-    ValueExponentXP = FunctionXP.subs(xp, 10^-6)
-    ValueExponentYP = FunctionYP.subs(yp, 10^-6)
-    SigmaXP = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10**-4)/sp.log(ValueExponentXP/ValueAXP)/10**-12)
-    SigmaYP = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10**-4)/sp.log(ValueExponentYP/ValueAYP)/10**-12)
-    return [SigmaXP, SigmaYP]
-print(AngularBeamSize(4,2))
+#
+# def IntegralXY():
+#     if sp.diff(IntegralXYXP(), xp) == 0:
+#         return 1
+#     else:
+#         return 1
+#
+# # print(IntegralXY(x, y, 5, 2))
+#
+# def BeamGeoSize(n , n_digits):
+#     FunctionX = IntegralXY(x, y, n, n_digits).subs(y, 0)                     #todo check the minus in sigma
+#     FunctionY = IntegralXY(x, y, n, n_digits).subs(x, 0)
+#     ValueAX = FunctionX.subs(x, 0)
+#     ValueAY = FunctionY.subs(y, 0)
+#     ValueExponentX = FunctionX.subs(x, 10^-6)
+#     ValueExponentY = FunctionY.subs(y, 10^-6)
+#     SigmaX = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10**-4)/sp.log(ValueExponentX/ValueAX))
+#     SigmaY = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10**-4)/sp.log(ValueExponentY/ValueAY))
+#     return [SigmaX, SigmaY]
+# # print(BeamGeoSize())
+#
+# # Angle size of the beam
+#
+# def IntegralXXPYP(n, n_digits):
+#     if sp.diff(IntegralXYXPYP(x, xp, y, yp), y) == 0:
+#         return 1
+#     else:
+#         v, w = gauss_hermite(n, n_digits)
+#         result = 0
+#         for i in range(n):
+#             result = result + w[i] * IntegralXYXPYP(x, xp, y, yp).subs(y, v[i])
+#         return result
+# # print(IntegralXYXP(x, xp, y, 8, 3))
+#
+# def IntegralXPYP(n, n_digits):
+#     if sp.diff(IntegralXXPYP(n, n_digits), x) == 0:
+#         return 1
+#     else:
+#         v, w = gauss_hermite(n, n_digits)
+#         result = 0
+#         for i in range(n):
+#             result = result + w[i] * IntegralXXPYP(n, n_digits).subs(x, v[i])
+#         return result
+# print(IntegralXPYP(5,2))
+#
+# def AngularBeamSize(n, n_digits):
+#     FunctionXP = IntegralXPYP(n, n_digits).subs(yp,0)
+#     FunctionYP = IntegralXPYP(n, n_digits).subs(xp,0)
+#     ValueAXP = FunctionXP.subs(xp,0)
+#     ValueAYP = FunctionYP.subs(yp,0)
+#     ValueExponentXP = FunctionXP.subs(xp, 10^-6)
+#     ValueExponentYP = FunctionYP.subs(yp, 10^-6)
+#     SigmaXP = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10**-4)/sp.log(ValueExponentXP/ValueAXP)/10**-12)
+#     SigmaYP = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10**-4)/sp.log(ValueExponentYP/ValueAYP)/10**-12)
+#     return [SigmaXP, SigmaYP]
+# print(AngularBeamSize(4,2))
 
 #flux
 
-def Beam(x, y, xp, yp, dl):
-    SourceI = 6 * 10**20
-    return NewSource2(x, y, xp, yp, dl)[0]*NewSource2(x, y, xp, yp, dl)[1]*SourceLambda(dl, SigmaSLambda=1e-6)*SourceI
+# def Beam():                                                                 # X-ray source, kinda useless
+#     SourceI = 6 * 10**20
+#     return NewSource2()[0]*NewSource2()[1]*SourceLambda(dl, SigmaSLambda=1e-6)*SourceI
 
-def Beamdl(x, y, xp, yp):
-    dl = 2
-    return Beam(x, y, xp, yp, dl)
 
-def IntegralXYXPYPdl(dl):
-    if sp.diff(Beam(x, xp, y, yp, dl), x) == 0:
-        return 0
-    elif sp.diff(Beam(x, xp, y, yp, dl), y) == 0:
-        return 0
-    elif sp.diff(Beam(x, xp, y, yp, dl), xp) == 0:
-        return 0
-    elif sp.diff(Beam(x, xp, y, yp, dl), yp) == 0:
-        return 0
+def Sigma1_MaxFluxL_FluxPhi():
+    SourceI = 6 * 10 ** 20
+    Ix = lambda u, up, ddl: NewSource2()[0].subs([(x, u), (xp, up), (dl, ddl)])                         #nquad only works with a function that has non-global and non-symbol parameters
+    print('Ix is :',Ix(x, xp, dl))
+    Iy = lambda v, vp, ddl: NewSource2()[1].subs([(y, v), (yp, vp), (dl, ddl)])
+    if sp.diff(Ix(x, xp, dl), dl) == 0:                                                                 #basically, we need to split the expression otherwise it takes too much time to integrate
+        IYint = lambda v, vp, ddl : Iy(v, vp, ddl)*SourceLambda(ddl, SigmaSLambda=1e-4)*SourceI
+        IxIntegrated = si.nquad(Ix, [[-10**-6, 10**-6], [-10**-6, 10**-6]], args=(0,))[0]
+        print('IxIntegrated is :',IxIntegrated)
+        ValueAL= IxIntegrated * si.nquad(IYint, [[-10**-6, 10**-6], [-10**-6, 10**-6]], args=(0,))[0]
+        print(" ValueAL gives :", ValueAL)
+        ValueExponentL = IxIntegrated * si.nquad(IYint, [[-10**-6, 10**-6], [-10**-6, 10**-6]], args=(10**-3,))[0]
+        print(" ValueExponentL gives :", ValueExponentL)
+        Sigma = 1/2/sqrt(2*np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentL / ValueAL) / 10 ** 6)
+        MaxFluxL = ValueAL
+        FluxPhi = IxIntegrated * si.nquad(IYint, [[-10**-6, 10**-6], [-10**-6, 10**-6], [dlBoundaries[0], dlBoundaries[1]]])[0]
+        FluxPhi = CoefAtten * CoefMonoX * CoefMonoY * FluxPhi
+        return Sigma, MaxFluxL, FluxPhi
+    elif sp.diff(Iy(y, yp, dl), dl) == 0:
+        IXint = lambda u, up, ddl : Ix(u, up, ddl)*SourceLambda(ddl, SigmaSLambda=1e-4)*SourceI
+        IyIntegrated = si.nquad(Iy, [[-10**-6, 10**-6], [-10**-6, 10**-6]], args=(0,))[0]
+        ValueAL = IyIntegrated * si.nquad(IXint, [[-10**-6, 10**-6], [-10**-6, 10**-6]], args=(0,))[0]
+        print(" ValueAL gives :", ValueAL)
+        ValueExponentL = IyIntegrated * si.nquad(IXint, [[-10**-6, 10**-6], [-10**-6, 10**-6]], args=(10 ** -3,))[0]
+        print(" ValueExponentL gives :", ValueExponentL)
+        Sigma = 1/2/sqrt(2*np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentL / ValueAL) / 10 ** 6)
+        MaxFluxL = ValueAL
+        FluxPhi = IyIntegrated * si.nquad(IXint, [[-10**-6, 10**-6], [-10**-6,10**-6], [dlBoundaries[0], dlBoundaries[1]]])[0]
+        FluxPhi = CoefAtten * CoefMonoX * CoefMonoY * FluxPhi
+        return Sigma, MaxFluxL, FluxPhi
     else:
-        return si.nquad(Beamdl, [[-np.inf, np.inf], [-np.inf, np.inf], [-np.inf, np.inf], [-np.inf, np.inf]])
-print(IntegralXYXPYPdl(1*10**-3))
+        print("Computation time too long, DeltaLambda variation on both axis -> not possible")
+        return 0
+
+print(Sigma1_MaxFluxL_FluxPhi())
+
+
+
