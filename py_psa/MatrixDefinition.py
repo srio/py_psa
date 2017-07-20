@@ -371,202 +371,251 @@ def testAcceptanceWaveMulti():
     print("Mistakes ?", nut.assert_almost_equal(Acceptance, result, decimal=5))
 print(testAcceptanceWaveMulti())
 
-# todo Simplest example : propagation
 
-z0 = 20000
-Flight_paths_in_order = [z0]
-MatTab = [MatrixFlight(z0)]
+
+
+
+# todo Single slit example
+# number of elements in the device : n
+
+z0 = 10000
+z1 = 12000
+Flight_paths_in_order = [z0,z1]
+AperturSlitX0 = 20
+AperturSlitY0 = 30
+Slit = [AperturSlitX0, AperturSlitY0, np.eye(3), 0]
+MatTab = [MatrixFlight(z0), Slit[2], MatrixFlight(z1)]
+ObjectList = [Slit]
 dlBoundaries = [-10**-6,10**-6]
 CoefMonoX = 1
 CoefMonoY = 1
 CoefAtten = 1
 SourceI = 1e25
 
-def MatCreation(x, xp, y, yp, dl):
+# class Object:
+#     def __init__(self):
+#         self.type = "Mirror"
+#     Object.Matrix = MatrixMirror
+
+
+
+def SourceCreation(x, xp, y, yp, dl):
+    M = MatTab.copy()
     MatTempX = np.array([x,xp,dl])
     MatTempY = np.array([y, yp, dl])
-    MatTempX = np.dot(MatrixFlight(z0),MatTempX)
-    MatTempY = np.dot(MatrixFlight(z0), MatTempY)
-    return [MatTempX,MatTempY]
+    if len(M)==1:
+        MatTempX = np.dot(MatrixFlight(z0), MatTempX)
+        MatTempY = np.dot(MatrixFlight(z0), MatTempY)
+        NewSourceX = SourceXXP(MatTempX[0], MatTempX[1])
+        NewSourceY = SourceYYP(MatTempY[0], MatTempY[1])
+    else :
+        for i in range(len(M)-1, -1, -1):
+            MatTempX = np.dot(M[i], MatTempX)
+            MatTempY = np.dot(M[i], MatTempY)
+        NewSourceX = SourceXXP(MatTempX[0], MatTempX[1])
+        NewSourceY = SourceYYP(MatTempY[0], MatTempY[1])
+        del M[0]
+        while M!=[]:
+            for i in range(len(M)-1,-1,-1):
+                MatTempX = np.dot(M[i],MatTempX)
+                MatTempY = np.dot(M[i], MatTempY)
+            NewSourceX = NewSourceX * AcceptanceSlit(MatTempX[0], Slit[0], Slit[3])
+            NewSourceY = NewSourceY * AcceptanceSlit(MatTempY[0], Slit[1], Slit[3])
+            del M[0:2]
+        return [NewSourceX, NewSourceY]
 
-def NewSource(x, xp, y, yp, dl):
-    MatTempX = MatCreation(x, xp, y, yp, dl)[0]
-    MatTempY = MatCreation(x, xp, y, yp, dl)[1]
-    NewSourceX = SourceXXP(MatTempX[0], MatTempX[1])
-    NewSourceY = SourceYYP(MatTempY[0], MatTempY[1])
-    return [NewSourceX, NewSourceY]
 
-def testNewSource(x, xp, y, yp, dl):
-    print(">> NewSource in test")
-    Math1 = sp.exp(1/2 * (-100*(x - 20000*xp)**2 - 1.11111*10**9*xp**2))
-    Math2 = sp.exp(1/2*(-10000 *(y - 20000*yp)**2 - 1.*10**8*yp**2))
-    Theory = Math1.subs([(x, 1), (xp, 2)])
-    Result = NewSource(x, xp, y, yp , dl)[0].subs([(x, 1), (xp, 2), (y, 3), (yp, 4)])
-    nut.assert_almost_equal(Theory, Result, decimal=5)
-    Theory = Math2.subs([(y, 3), (yp, 4)])
-    Result = NewSource(x, xp, y, yp,dl)[1].subs([(x, 1), (xp, 2), (y, 3), (yp, 4)])
-    nut.assert_almost_equal(Theory, Result, decimal=5)
-    print('Mistakes ? ')
+# del MatTab[0:2]
+# MatCreation()
 
-def IxGeo(xp, dl, x):
-    return NewSource(x, xp, 0, 0, dl)[0]
-def IyGeo(yp, dl, y):
-    return NewSource(0,0, y, yp, dl)[1]
-def IXintGeo(xp, dl, x):
-    return IxGeo(xp, dl, x)* SourceLambda(dl, SigmaSLambda=1e-3) * SourceI
-def IYintGeo(yp, dl, y):
-    return IyGeo(yp, dl, y) * SourceLambda(dl, SigmaSLambda=1e-3) * SourceI
 
 def BeamGeoSize():
-
-    #integration limit calculation
-    IotaXp = 10**-7
-    while IxGeo(IotaXp, 0, 0) > 10**-10 * IxGeo(0,0,0) :
+    Ix = lambda xp, dl, x : SourceCreation(x, xp, 0, 0, dl)[0]
+    Iy = lambda yp, dl, y : SourceCreation(0,0, y, yp, dl)[1]
+    # integration limit calculation
+    IotaXp = 10 ** -7
+    while Ix(IotaXp, 0, 0) > 10 ** -20 * Ix(0, 0, 0):
         IotaXp = IotaXp * 2
-    IotaYp = 10**-7
-    while IYintGeo(IotaYp, 0, 0) > 10**-10 * IYintGeo(0,0,0) :
+    IotaYp = 10 ** -7
+    while Iy(IotaYp, 0, 0) > 10 ** -20 * Iy(0, 0, 0):
         IotaYp = IotaYp * 2
-    IotaYdl = 10**-7
-    while IYintGeo(0, IotaYdl, 0) > 10**-10 * IYintGeo(0,0,0) :
-        IotaYdl = IotaYdl * 2
-    print('The integration limit is :', [IotaXp, IotaYp, IotaYdl])
-    # we are going to do 4 integrations : along xp and dl with x = {0,10**-2}, along yp and dl with y = {0,10**-2}
-    # we can do that since the integrals can be separated, and it takes less time to calculate. Adding a parameter
-    # to a numerical integration multiplies the execution time by approx 300.
-    # args(0,10**-2) sets the values of dl and x to 0 and 10**-2
-    IxIntegrated_0 = si.quad(IxGeo, -IotaXp, IotaXp, args=(0, 0))[0]    #up is integrated
-    IxIntegrated_E2 = si.quad(IxGeo, -IotaXp, IotaXp, args=(0, 10 ** -2))[0]
-    IyIntegrated_0 = si.nquad(IYintGeo, [[-IotaYp, IotaYp],[-IotaYdl, IotaYdl]], args=(0,))[0]
-    IyIntegrated_E2 = si.nquad(IYintGeo, [[-IotaYp, IotaYp],[-IotaYdl, IotaYdl]], args=(10 ** -2,))[0]
-    print(IxIntegrated_0, IxIntegrated_E2, IyIntegrated_0, IyIntegrated_E2)
-    ValueAX = IxIntegrated_0 * IyIntegrated_0
-    print(ValueAX)
-    ValueAY = ValueAX
-    ValueExponentX = IyIntegrated_0 * IxIntegrated_E2
-    ValueExponentY = IxIntegrated_0 * IyIntegrated_E2
-    SigmaX = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) * (10 ** -4) / -log(ValueExponentX / ValueAX))
-    SigmaY = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) * (10 ** -4) / -log(ValueExponentY / ValueAY))
-    return [SigmaX, SigmaY]
+    #
+    if Ix(0,0,0) == Ix(0,100,0): #you check the dependancy on dl
+        print("Lambda is affected to x")
+        IYint = lambda yp, dl, y : Iy(yp, dl, y) * SourceLambda(dl, SigmaSLambda=1e-3) * SourceI
+        IotaYdl = 10**-7
+        while IYint(0, IotaYdl, 0) > 10**-10 * IYint(0,0,0) :
+            IotaYdl = IotaYdl * 2
+        print('The integration limits are :', [IotaXp, IotaYp, IotaYdl])
+        # we are going to do 4 integrations : along xp and dl with x = {0,10**-2}, along yp and dl with y = {0,10**-2}
+        # we can do that since the integrals can be separated, and it takes less time to calculate. Adding a parameter
+        # to a numerical integration multiplies the execution time by approx 300.
+        # args(0,10**-2) sets the values of dl and x to 0 and 10**-2
+        IxIntegrated_0 = si.quad(Ix, -IotaXp, IotaXp, args=(0, 0))[0]    #up is integrated
+        IxIntegrated_E2 = si.quad(Ix, -IotaXp, IotaXp, args=(0, 10 ** -2))[0]
+        IyIntegrated_0 = si.nquad(IYint, [[-IotaYp, IotaYp],[-IotaYdl, IotaYdl]], args=(0,))[0]
+        IyIntegrated_E2 = si.nquad(IYint, [[-IotaYp, IotaYp],[-IotaYdl, IotaYdl]], args=(10 ** -2,))[0]
+        print(IxIntegrated_0, IxIntegrated_E2, IyIntegrated_0, IyIntegrated_E2)
+        ValueAX = IxIntegrated_0 * IyIntegrated_0
+        print(ValueAX)
+        ValueAY = ValueAX
+        ValueExponentX = IyIntegrated_0 * IxIntegrated_E2
+        ValueExponentY = IxIntegrated_0 * IyIntegrated_E2
+        SigmaX = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) * (10 ** -4) / -log(ValueExponentX / ValueAX))
+        SigmaY = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) * (10 ** -4) / -log(ValueExponentY / ValueAY))
+        return [SigmaX, SigmaY]
+    elif Iy(0,0,0) == Iy(0,100,0):
+        print("Lambda is affected to y")
+        IXint = lambda xp, dl, x: Ix(xp, dl, x) * SourceLambda(dl, SigmaSLambda=1e-3) * SourceI
+        IotaXdl = 10 ** -7
+        while IXint(0, IotaXdl, 0) > 10 ** -10 * IXint(0, 0, 0):
+            IotaXdl = IotaXdl * 2
+        print('The integration limits are :', [IotaXp, IotaYp, IotaXdl])
+        IyIntegrated_0 = si.quad(Iy, -IotaYp, IotaYp, args=(0, 0))[0]
+        IyIntegrated_E2 = si.quad(Iy, -IotaYp, IotaYp, args=(0, 10 ** -2))[0]
+        IxIntegrated_0 = si.nquad(IXint, [[-IotaXp, IotaXp], [-IotaXdl, IotaXdl]], args=(0,))[0]
+        IxIntegrated_E2 = si.nquad(IXint, [[-IotaXp, IotaXp], [-IotaXdl, IotaXdl]], args=(10 ** -2,))[0]
+        print(IyIntegrated_0, IyIntegrated_E2, IxIntegrated_0, IxIntegrated_E2)
+        ValueAX = IxIntegrated_0 * IyIntegrated_0
+        print(ValueAX)
+        ValueAY = ValueAX
+        ValueExponentX = IyIntegrated_0 * IxIntegrated_E2
+        ValueExponentY = IxIntegrated_0 * IyIntegrated_E2
+        SigmaX = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) * (10 ** -4) / -log(ValueExponentX / ValueAX))
+        SigmaY = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) * (10 ** -4) / -log(ValueExponentY / ValueAY))
+        return [SigmaX, SigmaY]
+    else:
+        print("Computation time too long, DeltaLambda variation on both axis -> not possible")
+        return 0
 print(BeamGeoSize())
 
 def BeamAngularSize():
-    Ixp = lambda x, dl, xp: NewSource(x, xp, 0, 0, dl)[0]
-    Iyp = lambda y, dl, yp : NewSource(0,0, y, yp, dl)[1]
-    IYpint = lambda y, dl, yp : Iyp(y, dl, yp) * SourceLambda(dl, SigmaSLambda=1e-3) * SourceI
-    #integration limit calculation
-    IotaXp = 10**-7
-    while Ixp(IotaXp, 0, 0) > 10**-10 * Ixp(0,0,0) :
+    Ixp = lambda x, dl, xp: SourceCreation(x, xp, 0, 0, dl)[0]
+    Iyp = lambda y, dl, yp : SourceCreation(0,0, y, yp, dl)[1]
+    # integration limit calculation
+    IotaXp = 10 ** -7
+    while Ixp(IotaXp, 0, 0) > 10 ** -10 * Ixp(0, 0, 0):
         IotaXp = IotaXp * 2
-    IotaYp = 10**-7
-    while IYpint(IotaYp,0,0) > 10**-10 * IYpint(0,0,0):
+    IotaYp = 10 ** -7
+    while Iyp(IotaYp, 0, 0) > 10 ** -10 * Iyp(0, 0, 0):
         IotaYp = IotaYp * 2
-    IotaYdl = 10**-7
-    while IYpint(0, IotaYdl, 0) > 10**-10 * IYpint(0,0,0):
-        IotaYdl = IotaYdl * 2
-    print('Integration limits are :', [IotaXp,IotaYp, IotaYdl])
-    #Integrations
-    IxpIntegrated_0 = si.quad(Ixp, -IotaXp, IotaXp, args=(0, 0))[0]
-    IxpIntegrated_E6 = si.quad(Ixp, -IotaXp, IotaXp, args=(0, 10 ** -6))[0]
-    IypIntegrated_0 = si.nquad(IYpint, [[-IotaYp, IotaYp], [-IotaYdl, IotaYdl]], args=(0,))[0]
-    IypIntegrated_E6 = si.nquad(IYpint, [[-IotaYp, IotaYp], [-IotaYdl, IotaYdl]], args=(10 ** -6,))[0]
-    print(IxpIntegrated_0, IxpIntegrated_E6, IypIntegrated_0, IypIntegrated_E6)
-    ValueAXp = IxpIntegrated_0 * IypIntegrated_0
-    print(ValueAXp)
-    ValueAYp = ValueAXp
-    ValueExponentXp = IypIntegrated_0 * IxpIntegrated_E6
-    ValueExponentYp = IxpIntegrated_0 * IypIntegrated_E6
-    SigmaXp = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentXp / ValueAXp))
-    SigmaYp = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentYp / ValueAYp))
-    return [SigmaXp, SigmaYp]
+    if Ixp(0, 0, 0) == Ixp(0, 100, 0):
+        IYpint = lambda y, dl, yp : Iyp(y, dl, yp) * SourceLambda(dl, SigmaSLambda=1e-3) * SourceI
+        IotaYdl = 10**-7
+        while IYpint(0, IotaYdl, 0) > 10**-10 * IYpint(0,0,0):
+            IotaYdl = IotaYdl * 2
+        print('Integration limits are :', [IotaXp,IotaYp, IotaYdl])
+        #Integrations
+        IxpIntegrated_0 = si.quad(Ixp, -IotaXp, IotaXp, args=(0, 0))[0]
+        IxpIntegrated_E6 = si.quad(Ixp, -IotaXp, IotaXp, args=(0, 10 ** -6))[0]
+        IypIntegrated_0 = si.nquad(IYpint, [[-IotaYp, IotaYp], [-IotaYdl, IotaYdl]], args=(0,))[0]
+        IypIntegrated_E6 = si.nquad(IYpint, [[-IotaYp, IotaYp], [-IotaYdl, IotaYdl]], args=(10 ** -6,))[0]
+        print(IxpIntegrated_0, IxpIntegrated_E6, IypIntegrated_0, IypIntegrated_E6)
+        ValueAXp = IxpIntegrated_0 * IypIntegrated_0
+        print(ValueAXp)
+        ValueAYp = ValueAXp
+        ValueExponentXp = IypIntegrated_0 * IxpIntegrated_E6
+        ValueExponentYp = IxpIntegrated_0 * IypIntegrated_E6
+        SigmaXp = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentXp / ValueAXp))
+        SigmaYp = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentYp / ValueAYp))
+        return [SigmaXp, SigmaYp]
+    elif Iyp(0,0,0) == Iyp(0,100,0):
+        IXpint = lambda x, dl, xp: Ixp(x, dl, xp) * SourceLambda(dl, SigmaSLambda=1e-3) * SourceI
+        IotaYdl = 10 ** -7
+        while IXpint(0, IotaXdl, 0) > 10 ** -10 * IXpint(0, 0, 0):
+            IotaYdl = IotaXdl * 2
+        print('Integration limits are :', [IotaXp, IotaYp, IotaXdl])
+        # Integrations
+        IypIntegrated_0 = si.quad(Iyp, -IotaYp, IotaYp, args=(0, 0))[0]
+        IypIntegrated_E6 = si.quad(Iyp, -IotaYp, IotaYp, args=(0, 10 ** -6))[0]
+        IxpIntegrated_0 = si.nquad(IXpint, [[-IotaXp, IotaXp], [-IotaXdl, IotaXdl]], args=(0,))[0]
+        IxpIntegrated_E6 = si.nquad(IXpint, [[-IotaXp, IotaXp], [-IotaXdl, IotaXdl]], args=(10 ** -6,))[0]
+        print(IxpIntegrated_0, IxpIntegrated_E6, IypIntegrated_0, IypIntegrated_E6)
+        ValueAXp = IxpIntegrated_0 * IypIntegrated_0
+        print(ValueAXp)
+        ValueAYp = ValueAXp
+        ValueExponentXp = IypIntegrated_0 * IxpIntegrated_E6
+        ValueExponentYp = IxpIntegrated_0 * IypIntegrated_E6
+        SigmaXp = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentXp / ValueAXp))
+        SigmaYp = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentYp / ValueAYp))
+        return [SigmaXp, SigmaYp]
+    else:
+        print("Computation time too long, DeltaLambda variation on both axis -> not possible")
+        return 0
 print(BeamAngularSize())
 
 def Sigma1_MaxFluxL_FluxPhi():
-    Ix = lambda x, xp, dl: NewSource(x, xp, 0, 0, dl)[0]
-    Iy = lambda y, yp, dl: NewSource(0, 0, y, yp, dl)[1]
-    IYint = lambda y, yp, dl: Iy(y, yp, dl) * SourceLambda(dl, SigmaSLambda=1e-3) * SourceI
-    # integration limit calculation
+    Ix = lambda x, xp, dl: SourceCreation(x, xp, 0, 0, dl)[0]
+    Iy = lambda y, yp, dl: SourceCreation(0, 0, y, yp, dl)[1]
+    #integration limit calculation
     IotaX = 10 ** -7
-    while Ix(IotaX, 0, 0) > 10**-20 * Ix(0, 0, 0):
+    while Ix(IotaX, 0, 0) > 10 ** -20 * Ix(0, 0, 0):
         IotaX = IotaX * 2
     IotaXp = 10 ** -7
-    while Ix(0, IotaXp, 0) > 10**-20 * Ix(0, 0, 0):
+    while Ix(0, IotaXp, 0) > 10 ** -20 * Ix(0, 0, 0):
         IotaXp = IotaXp * 2
     IotaY = 10 ** -7
-    while IYint(IotaY, 0, 0) > 10**-20 * IYint(0, 0, 0):
+    while Iy(IotaY, 0, 0) > 10 ** -20 * Iy(0, 0, 0):
         IotaY = IotaY * 2
     IotaYp = 10 ** -7
-    while IYint(0, IotaYp, 0) > 10**-20 * IYint(0, 0, 0):
+    while Iy(0, IotaYp, 0) > 10 ** -20 * Iy(0, 0, 0):
         IotaYp = IotaYp * 2
-    IotaYdl = 10 ** -7
-    while IYint(0, 0, IotaYdl) > 10 ** -20 * IYint(0, 0, 0):
-        IotaYdl = IotaYdl * 2
-    # IotaX = 10*IotaX
-    # IotaY = 10*IotaY
-    # IotaYdl = 10*IotaYdl
-    # IotaXp = 10*IotaXp
-    # IotaYp = 10*IotaYp
-    print('Integration limits are :', [IotaX, IotaY, IotaXp, IotaYp, IotaYdl])
-    #Integrations
-    IxIntegrated = si.nquad(Ix, [[-IotaX, IotaX], [-IotaXp, IotaXp]], args=(0,))[0]
-    IyIntegrated_0 = si.nquad(IYint, [[-IotaY, IotaY], [-IotaYp, IotaYp]], args=(0,))[0]
-    IyIntegrated_E3 = si.nquad(IYint, [[-IotaY, IotaY], [-IotaYp,IotaYp]], args=(10 ** -3,))[0]
-    print('IxIntegrated is :', IxIntegrated)
-    # ValueAL needs dl = 0, so we set it to 0 during the integration
-    ValueAL = IxIntegrated * IyIntegrated_0
-    print(" ValueAL gives :", ValueAL)
-    # ValueExponentL needs dl = 10**-3, so we set it to 10**-3 during the integration
-    ValueExponentL = IxIntegrated * IyIntegrated_E3
-    print(" ValueExponentL gives :", ValueExponentL)
-    Sigma = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentL / ValueAL) / 10 ** 6)
-    MaxFluxL = ValueAL
-    FluxPhi = si.nquad(IYint, [[-IotaY, IotaY], [-IotaYp, IotaYp], [-IotaYdl, IotaYdl]])
-    print(FluxPhi)
-    FluxPhi = IxIntegrated * FluxPhi[0]
-    FluxPhi = CoefAtten * CoefMonoX * CoefMonoY * FluxPhi
-    return Sigma, MaxFluxL, FluxPhi
+    if Ix(0, 0, 0) == Ix(0, 0, 100):  # you check the dependancy on dl
+        IYint = lambda y, yp, dl: Iy(y, yp, dl) * SourceLambda(dl, SigmaSLambda=1e-3) * SourceI
+        IotaYdl = 10 ** -7
+        while IYint(0, 0, IotaYdl) > 10 ** -20 * IYint(0, 0, 0):
+            IotaYdl = IotaYdl * 2
+        print('Integration limits are :', [IotaX, IotaY, IotaXp, IotaYp, IotaYdl])
+        #Integrations
+        IxIntegrated = si.nquad(Ix, [[-IotaX, IotaX], [-IotaXp, IotaXp]], args=(0,))[0]
+        IyIntegrated_0 = si.nquad(IYint, [[-IotaY, IotaY], [-IotaYp, IotaYp]], args=(0,))[0]
+        IyIntegrated_E3 = si.nquad(IYint, [[-IotaY, IotaY], [-IotaYp,IotaYp]], args=(10 ** -3,))[0]
+        print('IxIntegrated is :', IxIntegrated)
+        # ValueAL needs dl = 0, so we set it to 0 during the integration
+        ValueAL = IxIntegrated * IyIntegrated_0
+        print(" ValueAL gives :", ValueAL)
+        # ValueExponentL needs dl = 10**-3, so we set it to 10**-3 during the integration
+        ValueExponentL = IxIntegrated * IyIntegrated_E3
+        print(" ValueExponentL gives :", ValueExponentL)
+        Sigma = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentL / ValueAL) / 10 ** 6)
+        MaxFluxL = ValueAL
+        FluxPhi = si.nquad(IYint, [[-IotaY, IotaY], [-IotaYp, IotaYp], [-IotaYdl, IotaYdl]])
+        print(FluxPhi)
+        FluxPhi = IxIntegrated * FluxPhi[0]
+        FluxPhi = CoefAtten * CoefMonoX * CoefMonoY * FluxPhi
+        return Sigma, MaxFluxL, FluxPhi
+    elif Iy(0, 0, 0) == Iy(0, 0, 100):
+        IXint = lambda x, xp, dl: Ix(x, xp, dl) * SourceLambda(dl, SigmaSLambda=1e-3) * SourceI
+        IotaXdl = 10 ** -7
+        while IXint(0, 0, IotaXdl) > 10 ** -20 * IXint(0, 0, 0):
+            IotaXdl = IotaXdl * 2
+        print('Integration limits are :', [IotaX, IotaY, IotaXp, IotaYp, IotaXdl])
+        # Integrations
+        IyIntegrated = si.nquad(Iy, [[-IotaY, IotaY], [-IotaYp, IotaYp]], args=(0,))[0]
+        IxIntegrated_0 = si.nquad(IXint, [[-IotaX, IotaX], [-IotaXp, IotaXp]], args=(0,))[0]
+        IxIntegrated_E3 = si.nquad(IXint, [[-IotaX, IotaX], [-IotaXp, IotaXp]], args=(10 ** -3,))[0]
+        print('IxIntegrated is :', IxIntegrated_0)
+        # ValueAL needs dl = 0, so we set it to 0 during the integration
+        ValueAL = IxIntegrated_0 * IyIntegrated
+        print(" ValueAL gives :", ValueAL)
+        ValueExponentL = IyIntegrated * IxIntegrated_E3
+        print(" ValueExponentL gives :", ValueExponentL)
+        Sigma = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentL / ValueAL) / 10 ** 6)
+        MaxFluxL = ValueAL
+        FluxPhi = si.nquad(IXint, [[-IotaX, IotaX], [-IotaXp, IotaXp], [-IotaXdl, IotaXdl]])
+        print(FluxPhi)
+        FluxPhi = IyIntegrated * FluxPhi[0]
+        FluxPhi = CoefAtten * CoefMonoX * CoefMonoY * FluxPhi
+        return Sigma, MaxFluxL, FluxPhi
+    else:
+        print("Computation time too long, DeltaLambda variation on both axis -> not possible")
+        return 0
 print(Sigma1_MaxFluxL_FluxPhi())
 
-# # todo Single slit example
-# # number of elements in the device : n
-#
-# z0 = 10000
-# z1 = 12000
-# Flight_paths_in_order = [z0,z1]
-# AperturSlitX0 = 20
-# AperturSlitY0 = 30
-# Slit = [AperturSlitX0, AperturSlitY0, np.ones((3, 3)), 0]
-# MatTab = [MatrixFlight(z0), Slit[2], MatrixFlight(z1)]
-# dlBoundaries = [-10**-6,10**-6]
-# CoefMonoX = 1
-# CoefMonoY = 1
-# CoefAtten = 1
-# SourceI = 1e25
-#
-# def MatCreation():
-#     MatTempX = np.array([x,xp,dl])
-#     MatTempY = np.array([y, yp, dl])
-#     for i in range(len(MatTab)-1,0,-1):
-#         MatTempX = np.dot(MatTab[i],MatTempX)
-#         MatTempY = np.dot(MatTab[i], MatTempY)
-#     return [MatTempX,MatTempY]
-# print(">>>>>>>" , MatCreation()[1], np.shape(MatCreation()[0]),np.shape(MatCreation()[1]))
-#
-# def NewSource():
-#     MatTempX = MatCreation()[0]
-#     MatTempY = MatCreation()[1]
-#     NewSourceX = SourceXXP(MatTempX[0], MatTempX[1])
-#     NewSourceY = SourceYYP(MatTempY[0], MatTempY[1])
-#     return [NewSourceX, NewSourceY]
-# print(NewSource())
-#
-# del MatTab[0:2]
-# MatCreation()
-#
-# def NewSource2():
-#     NewSourceX = NewSource()[0]*AcceptanceSlit(MatCreation()[0][0], Slit[0], Slit[3])
-#     NewSourceY = NewSource()[1]*AcceptanceSlit(MatCreation()[1][0], Slit[1], Slit[3])
-#     return [NewSourceX, NewSourceY]
-# print(">>>>>>", NewSource2())
+
+
+
+# i dont really know what these functions are for
 #
 # # Integrations
 # # Beam Size
@@ -586,135 +635,3 @@ print(Sigma1_MaxFluxL_FluxPhi())
 # #     else:
 # #         return sp.integrate(NewSourceY, (dl, -np.inf, np.inf))
 # # print(IntegralYYP())
-#
-# def BeamGeoSize():
-#     Ix = lambda up, ddl, u: NewSource2()[0].subs([(x, u), (xp, up), (dl, ddl)])
-#     print('Ix is :', Ix(xp, dl, x))
-#     Iy = lambda vp, ddl, v: NewSource2()[1].subs([(y, v), (yp, vp), (dl, ddl)])
-#     print('Iy is :', Iy(y, yp, dl))
-#     if sp.diff(Ix(xp, dl, x), dl) == 0:
-#         IYint = lambda vp, ddl, v: Iy(vp, ddl, v) * SourceLambda(ddl, SigmaSLambda=1e-3) * SourceI
-#         print('IYint is :', IYint(yp, dl, y))
-#         #we are going to do 4 integrations : along xp and dl with x = {0,10**-2}, along yp and dl with y = {0,10**-2}
-#         #we can do that since the integrals can be separated, and it takes less time to calculate. Adding a parameter
-#         #to a numerical integration multiplies the execution time by approx 300.
-#         # args(0,10**-2) sets the values of dl and x to 0 and 10**-2
-#         IxIntegrated_0 = si.quad(Ix, -10 ** -6, 10 ** -6, args=(0,0))[0]
-#         IxIntegrated_E2 = si.quad(Ix, -10 ** -6, 10 ** -6, args=(0,10**-2))[0]
-#         IyIntegrated_0 = si.nquad(IYint, [[-10**-6, 10**-6], [-10**-6, 10**-6]], args=(0,))[0]
-#         IyIntegrated_E2 = si.nquad(IYint, [[-10 ** -6, 10 ** -6], [-10 ** -6, 10 ** -6]], args=(10**-2,))[0]
-#         print(IxIntegrated_0, IxIntegrated_E2, IyIntegrated_0, IyIntegrated_E2 )
-#         ValueAX = IxIntegrated_0 * IyIntegrated_0
-#         print(ValueAX)
-#         ValueAY = ValueAX
-#         ValueExponentX = IyIntegrated_0 * IxIntegrated_E2
-#         ValueExponentY = IxIntegrated_0 * IyIntegrated_E2
-#         SigmaX = 1 / 2 / sqrt(2 * np.log(2)) * sp.sqrt(4 * log(2) * (10 ** -4) / -sp.log(ValueExponentX / ValueAX))
-#         SigmaY = 1/2/sqrt(2*np.log(2)) * sp.sqrt(4*log(2)*(10**-4)/-sp.log(ValueExponentY/ValueAY))
-#         return [SigmaX, SigmaY]
-#     elif sp.diff(Iy(yp, dl, y), dl) == 0:
-#         IXint = lambda up, ddl, u: Ix(up. ddl, u) * SourceLambda(ddl, SigmaSLambda=1e-4) * SourceI
-#         IxIntegrated_0 = si.nquad(IXint, [[-10 ** -6, 10 ** -6], [-10 ** -6, 10 ** -6]], args=(0,))[0]
-#         IxIntegrated_E2 = si.nquad(IXint, [[-10 ** -6, 10 ** -6], [-10 ** -6, 10 ** -6]], args=(10 ** -2,))[0]
-#         IyIntegrated_0 = si.quad(Iy,-10 ** -6, 10 ** -6, args=(0,0))[0]
-#         IyIntegrated_E2 = si.quad(Iy,-10 ** -6, 10 ** -6, args=(0, 10**-2))[0]
-#         ValueAX = IxIntegrated_0 * IyIntegrated_0
-#         ValueAY = ValueAX
-#         ValueExponentX = IyIntegrated_0 * IxIntegrated_E2
-#         ValueExponentY = IxIntegrated_0 * IyIntegrated_E2
-#         SigmaX = 1 / 2 / sqrt(2 * np.log(2)) * sp.sqrt(4 * log(2) * (10 ** -4) / -sp.log(ValueExponentX / ValueAX))
-#         SigmaY = 1 / 2 / sqrt(2 * np.log(2)) * sp.sqrt(4 * log(2) * (10 ** -4) / -sp.log(ValueExponentY / ValueAY))
-#         return [SigmaX, SigmaY]
-#     else:
-#         print("Computation time too long, DeltaLambda variation on both axis -> not possible")
-#         return 0
-# # print(BeamGeoSize())
-#
-#
-# # # Angle size of the beam
-#
-# def BeamAngularSize():
-#     Ixp = lambda u, ddl, up: NewSource2()[0].subs([(x, u), (xp, up), (dl, ddl)])
-#     print('Ixp is :', Ixp(x, dl, xp))
-#     Iyp = lambda v, ddl, vp: NewSource2()[1].subs([(y, v), (yp, vp), (dl, ddl)])
-#     print('Iyp is :', Iyp(y, dl, yp))
-#     if sp.diff(Ixp(x, dl, xp), dl) == 0:
-#         IYpint = lambda v, ddl, vp: Iyp(v, ddl, vp) * SourceLambda(ddl, SigmaSLambda=1e-4) * SourceI
-#         print('IYint is :', IYpint(y, dl, yp))
-#         IxpIntegrated_0 = si.quad(Ixp, -10 ** -6, 10 ** -6, args=(0, 0))[0]
-#         IxpIntegrated_E6 = si.quad(Ixp, -10 ** -6, 10 ** -6, args=(0, 10 ** -6))[0]
-#         IypIntegrated_0 = si.nquad(IYpint, [[-10 ** -6, 10 ** -6], [-10 ** -6, 10 ** -6]], args=(0,))[0]
-#         IypIntegrated_E6 = si.nquad(IYpint, [[-10 ** -6, 10 ** -6], [-10 ** -6, 10 ** -6]], args=(10 ** -6,))[0]
-#         print(IxpIntegrated_0, IxpIntegrated_E6, IypIntegrated_0, IypIntegrated_E6)
-#         ValueAXp = IxpIntegrated_0 * IypIntegrated_0
-#         print(ValueAXp)
-#         ValueAYp = ValueAXp
-#         ValueExponentXp = IypIntegrated_0 * IxpIntegrated_E6
-#         ValueExponentYp = IxpIntegrated_0 * IypIntegrated_E6
-#         SigmaXp = 1 / 2 / sqrt(2 * np.log(2)) * sp.sqrt(4 * log(2) * (10 ** -4) / -sp.log(ValueExponentXp / ValueAXp))
-#         SigmaYp = 1 / 2 / sqrt(2 * np.log(2)) * sp.sqrt(4 * log(2) * (10 ** -4) / -sp.log(ValueExponentYp / ValueAYp))
-#         return [SigmaXp, SigmaYp]
-#     elif sp.diff(Iyp(y, dl, yp), dl) == 0:
-#         IXpint = lambda u, ddl, up: Ixp(u, ddl, up) * SourceLambda(ddl, SigmaSLambda=1e-4) * SourceI
-#         IxpIntegrated_0 = si.nquad(IXpint, [[-10 ** -6, 10 ** -6], [-10 ** -6, 10 ** -6]], args=(0,))[0]
-#         IxpIntegrated_E6 = si.nquad(IXpint, [[-10 ** -6, 10 ** -6], [-10 ** -6, 10 ** -6]], args=(10 ** -6,))[0]
-#         IypIntegrated_0 = si.quad(Iyp, -10 ** -6, 10 ** -6, args=(0, 0))[0]
-#         IypIntegrated_E6 = si.quad(Iyp, -10 ** -6, 10 ** -6, args=(0, 10 ** -6))[0]
-#         ValueAXp = IxpIntegrated_0 * IypIntegrated_0
-#         print(ValueAXp)
-#         ValueAYp = ValueAXp
-#         ValueExponentXp = IypIntegrated_0 * IxpIntegrated_E6
-#         ValueExponentYp = IxpIntegrated_0 * IypIntegrated_E6
-#         SigmaXp = 1 / 2 / sqrt(2 * np.log(2)) * sp.sqrt(4 * log(2) * (10 ** -4) / -sp.log(ValueExponentXp / ValueAXp))
-#         SigmaYp = 1 / 2 / sqrt(2 * np.log(2)) * sp.sqrt(4 * log(2) * (10 ** -4) / -sp.log(ValueExponentYp / ValueAYp))
-#         return [SigmaXPmicrorad, SigmaYPmicrorad]
-#     else:
-#         print("Computation time too long, DeltaLambda variation on both axis -> not possible")
-#         return 0
-# # print(BeamAngularSize())
-#
-# #flux
-#
-# # def Beam():                                                                 # X-ray source, kinda useless
-# #     SourceI = 6 * 10**20
-# #     return NewSource2()[0]*NewSource2()[1]*SourceLambda(dl, SigmaSLambda=1e-6)*SourceI
-#
-#
-# def Sigma1_MaxFluxL_FluxPhi():
-#     Ix = lambda u, up, ddl: NewSource2()[0].subs([(x, u), (xp, up), (dl, ddl)])
-#     #nquad only works with a function that has non-global and non-symbol parameters
-#     print('Ix is :',Ix(x, xp, dl))
-#     Iy = lambda v, vp, ddl: NewSource2()[1].subs([(y, v), (yp, vp), (dl, ddl)])
-#     if sp.diff(Ix(x, xp, dl), dl) == 0:
-#         #basically, we need to split the expression otherwise it takes too much time to integrate
-#         IYint = lambda v, vp, ddl : Iy(v, vp, ddl)*SourceLambda(ddl, SigmaSLambda=1e-4)*SourceI
-#         #since Ix doesnt not depend upon dl, args=(0,) sets its value to 0 for the integration and it changes nothing
-#         IxIntegrated = si.nquad(Ix, [[-10**-6, 10**-6], [-10**-6, 10**-6]], args=(0,))[0]
-#         print('IxIntegrated is :',IxIntegrated)
-#         #ValueAL needs dl = 0, so we set it to 0 during the integration
-#         ValueAL= IxIntegrated * si.nquad(IYint, [[-10**-6, 10**-6], [-10**-6, 10**-6]], args=(0,))[0]
-#         print(" ValueAL gives :", ValueAL)
-#         #ValueExponentL needs dl = 10**-3, so we set it to 10**-3 during the integration
-#         ValueExponentL = IxIntegrated * si.nquad(IYint, [[-10**-6, 10**-6], [-10**-6, 10**-6]], args=(10**-3,))[0]
-#         print(" ValueExponentL gives :", ValueExponentL)
-#         Sigma = 1/2/sqrt(2*np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentL / ValueAL) / 10 ** 6)
-#         MaxFluxL = ValueAL
-#         FluxPhi = IxIntegrated * si.nquad(IYint, [[-10**-6, 10**-6], [-10**-6, 10**-6], [dlBoundaries[0], dlBoundaries[1]]])[0]
-#         FluxPhi = CoefAtten * CoefMonoX * CoefMonoY * FluxPhi
-#         return Sigma, MaxFluxL, FluxPhi
-#     elif sp.diff(Iy(y, yp, dl), dl) == 0:
-#         IXint = lambda u, up, ddl : Ix(u, up, ddl)*SourceLambda(ddl, SigmaSLambda=1e-4)*SourceI
-#         IyIntegrated = si.nquad(Iy, [[-10**-6, 10**-6], [-10**-6, 10**-6]], args=(0,))[0]
-#         ValueAL = IyIntegrated * si.nquad(IXint, [[-10**-6, 10**-6], [-10**-6, 10**-6]], args=(0,))[0]
-#         print(" ValueAL gives :", ValueAL)
-#         ValueExponentL = IyIntegrated * si.nquad(IXint, [[-10**-6, 10**-6], [-10**-6, 10**-6]], args=(10 ** -3,))[0]
-#         print(" ValueExponentL gives :", ValueExponentL)
-#         Sigma = 1/2/sqrt(2*np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentL / ValueAL) / 10 ** 6)
-#         MaxFluxL = ValueAL
-#         FluxPhi = IyIntegrated * si.nquad(IXint, [[-10**-6, 10**-6], [-10**-6,10**-6], [dlBoundaries[0], dlBoundaries[1]]])[0]
-#         FluxPhi = CoefAtten * CoefMonoX * CoefMonoY * FluxPhi
-#         return Sigma, MaxFluxL, FluxPhi
-#     else:
-#         print("Computation time too long, DeltaLambda variation on both axis -> not possible")
-#         return 0
-# # print(Sigma1_MaxFluxL_FluxPhi())
