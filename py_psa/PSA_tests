@@ -85,3 +85,59 @@ Experimental results
     Sigmax'= 29.999999999993598
     Sigmay'= 100.00000000006982
     SigmaLambda = 0.001
+
+Bent Horizontal mirror (same settings for vertical)
+    p=50000
+    q=10000
+    RMirror = 1
+    Sigma = 0
+    Delta = 0.1 or 0
+    IncAng = 0
+    Flux = 2.96873*10**12 photon/s
+    FWHMx = 0.536982 mm
+    FWHMy = 7.06450 mm
+    FWHMx' = 31.593200 mrad
+    FWHMy' = 235.48200 mrad
+    FWMHlambda = 2.354820*10**-3
+    Sigmax = 2.28035259e-01
+    sigmay =  3.00001693
+    Sigmax'= 1.34163968e+01
+    Sigmay'= 9.99999981e+01
+    SigmaLambda = 9.99999981e-04
+Results :
+    Flux =  120946362815.22792 photon/s
+    Sigmax = 0.22768485315975592
+    sigmay =  3.0000166666579502
+    Sigmax'= 13.438788222753518
+    Sigmay'= 100.00000000018085
+    SigmaLambda = 0.00100
+
+Bent vertical mirror :
+    Flux =  2.96873*10**12 photon/s
+    Sigmax = 9.05538410e-01
+    sigmay =  5.98164604e-01
+    Sigmax'= 2.99999994e+01
+    Sigmay'= 2.01358486e+01
+    SigmaLambda = 9.99999981e-04
+Results :
+    Flux =  1688546383744.6812 photon/s
+    Sigmax = 0.90553851381365258
+    sigmay =  0.59816422963060822
+    Sigmax'= 30.000000000026592
+    Sigmay'= 20.135853447897073
+    SigmaLambda = 0.00100000000000000
+
+ISN_case1 (3 mirrors and a slit)
+    Flux =  2.96873*10**12 photon/s
+    Sigmax = 2.56965283e+01
+    sigmay =  53.62038705e+02
+    Sigmax'= 3.21465329e+03
+    Sigmay'= 4.41940352e+04
+    SigmaLambda = 9.99999981e-04
+Results :
+    Flux =   photon/s
+    Sigmax =
+    sigmay =
+    Sigmax'=
+    Sigmay'=
+    SigmaLambda =

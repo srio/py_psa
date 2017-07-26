@@ -40,9 +40,9 @@ def MatrixMultilayer(Fmu):                                                  # Fo
 
 #Definition of the beam source
 
-def SourceXXP(x, xp, SigmaXSource=1e-1, SigmaXPSource=3e-5):
+def SourceXXP(x, xp, SigmaXSource=2.743e-1, SigmaXPSource=1.1e-2):
     return exp(-( (x/SigmaXSource)**2 + (xp/SigmaXPSource)**2) / 2 )
-def SourceYYP(y, yp, SigmaYSource=1e-2, SigmaYPSource=1e-4, GammaSource=0):
+def SourceYYP(y, yp, SigmaYSource=1.24e-2, SigmaYPSource=6.24e-3, GammaSource=0):
     return exp( -( (y/SigmaYSource)**2 + ((yp-GammaSource*y)/SigmaYPSource)**2)/2 )
 def SourceLambda(dl, SigmaSLambda=1e-3):
     return exp(-(dl)**2/2/SigmaSLambda**2)
@@ -374,56 +374,58 @@ print(testAcceptanceWaveMulti())
 
 
 
-
-
-# todo Single slit example
+# todo ISN_case1 study
 # number of elements in the device : n
 
-z0 = 10000
-z1 = 20000
-Flight_paths_in_order = [z0,z1]
+z0 = 35300
+z1 = 6900
+z2 = 29620
+z3 = 120
+z4 = 8060
+Flight_paths_in_order = [z0,z1, z2, z3, z4]
 
-#Slit data
-# AperturSlitX0 = 20
-# AperturSlitY0 = 30
-# Slit = [AperturSlitX0, AperturSlitY0, np.eye(3), 0]
-#Mono data
-# Alpha0  = 0
-# Wd0     = 1.000000*10**-6
-# WidthX0 = 2.000000*10**1
-# WidthY0 = 2.000000*10**1
-# RMono0  = 9.600000*10**-1
-# Rint0   = 1.000000*10**-5
-# thetaB0 = 1.140288*10**1 * pi /180
-# bMono0  = sin(thetaB0+Alpha0)/sin(thetaB0-Alpha0)
-# Mono = [Alpha0, Wd0, WidthX0, WidthY0,RMono0, Rint0, thetaB0, bMono0, MatrixMonoPlane(bMono0, thetaB0), np.eye(3) ]
-#MIrror data
-# Sigma0 = 0
-# Delta0 = 1.000000*10**-7
-# IncAng0 = 0
-# Lambda0 = 1.127140*10**-7
-# Fm0 = 8.333333*10**3
-# S = 1
-# Mirror = [np.eye(3), MatrixMirror(Fm0, Sigma0, IncAng0, Lambda0, Delta0, S)]
+#First mirror, vertical
+Sigma0 = 0
+Delta0 = 0
+IncAng0 = 8.985676*10**1
+Lambda0 = 1.239854*10**-7
+Fm0 = 5.771801*10**3
+S = 1
+
+#First slit
+AperturSlitX0 = 1.050000*10**-2
+AperturSlitY0 = 4.000000*10**-3
+
+#Second mirror, vertical
+Sigma2 = 0
+Delta2 = 0
+IncAng2 = 8.985676*10
+Lambda2 = 1.239854*10**-7
+Fm2 = 1.789128*10**2
+
+#Third mirror, horizontal
+Sigma3 = 0
+Delta3 = 0
+IncAng3 = 8.985676*10
+Lambda3 = 1.239854*10**-7
+Fm3 = 5.987919*10**1
 
 
-ListObject = ['']
-MatTabX = [MatrixFlight(z0), Mirror[-2], MatrixFlight(z1)]
-MatTabY = [MatrixFlight(z0), Mirror[-1], MatrixFlight(z1)]
-ObjectList = [Slit]
+Mirror1 = [np.eye(3), MatrixMirror(Fm0, Sigma0, IncAng0, Lambda0, Delta0, S)]
+Slit = [np.eye(3), np.eye(3), AperturSlitX0, AperturSlitY0, 0]
+Mirror2 = [np.eye(3), MatrixMirror(Fm2, Sigma2, IncAng2, Lambda2, Delta2, S)]
+Mirror3 = [MatrixMirror(Fm3, Sigma3, IncAng3, Lambda3, Delta3, S), np.eye(3)]
+
+ListObject = ['Mirror', 'Slit', 'Mirror', 'Mirror']
+MatTabX = [MatrixFlight(z0), Mirror1[0], MatrixFlight(z1),Slit[0], MatrixFlight(z2), Mirror2[0], MatrixFlight(z3), Mirror3[0], MatrixFlight(z4) ]
+MatTabY = [MatrixFlight(z0), Mirror1[1], MatrixFlight(z1),Slit[1], MatrixFlight(z2), Mirror2[1], MatrixFlight(z3), Mirror3[1], MatrixFlight(z4) ]
+SourceI = 6e20
+SigmaYPSource = 6.24e-3
+bMonoX  = 1
+bMonoY = 1
 CoefMonoX = 1
 CoefMonoY = 1
 CoefAtten = 1
-SourceI = 1e25
-SigmaYPSource = 10**-4
-bMonoX  = 1
-bMonoY = 1
-
-# class Object:
-#     def __init__(self):
-#         self.type = "Mirror"
-#     Object.Matrix = MatrixMirror
-
 
 
 def SourceCreation(x, xp, y, yp, dl):
@@ -449,9 +451,12 @@ def SourceCreation(x, xp, y, yp, dl):
             for i in range(len(MX)-1,-1,-1):
                 MatTempX = np.dot(MX[i],MatTempX)
                 MatTempY = np.dot(MY[i], MatTempY)
+            if k==0:
+                NewSourceX = SourceXXP(MatTempX[0], MatTempX[1])
+                NewSourceY = SourceYYP(MatTempY[0], MatTempY[1])
             if ListObject[k] == 'Slit':
-                NewSourceX = NewSourceX * AcceptanceSlit(MatTempX[0], Slit[0], Slit[3])
-                NewSourceY = NewSourceY * AcceptanceSlit(MatTempY[0], Slit[1], Slit[3])
+                NewSourceX = NewSourceX * AcceptanceSlit(MatTempX[0], Slit[2], Slit[4])
+                NewSourceY = NewSourceY * AcceptanceSlit(MatTempY[0], Slit[3], Slit[4])
             elif ListObject[k] == 'MonoPlaneVertical':
                 NewSourceY = NewSourceY * AcceptanceAngleMonoPlane(MatTempY[1], MatTempY[2], thetaB0, Wd0, RMono0, Rint0)
                 NewSourceY = NewSourceY * AcceptanceWaveMonoPlane(MatTempY[2], bMonoY*SigmaYPSource, thetaB0, Wd0)
@@ -463,19 +468,14 @@ def SourceCreation(x, xp, y, yp, dl):
             del MY[0:2]
     return [NewSourceX, NewSourceY]
 
-
-# del MatTab[0:2]
-# MatCreation()
-
-
 def BeamGeoSize():
     Ix = lambda xp, dl, x : SourceCreation(x, xp, 0, 0, dl)[0]
     Iy = lambda yp, dl, y : SourceCreation(0,0, y, yp, dl)[1]
     # integration limit calculation
-    IotaXp = 10 ** -8
+    IotaXp = 10 ** -20
     while Ix(IotaXp, 0, 0) > 10 ** -20 * Ix(0, 0, 0):
         IotaXp = IotaXp * 2
-    IotaYp = 10 ** -8
+    IotaYp = 10 ** -20
     while Iy(IotaYp, 0, 0) > 10 ** -20 * Iy(0, 0, 0):
         IotaYp = IotaYp * 2
     #
@@ -533,10 +533,10 @@ def BeamAngularSize():
     Ixp = lambda x, dl, xp: SourceCreation(x, xp, 0, 0, dl)[0]
     Iyp = lambda y, dl, yp : SourceCreation(0,0, y, yp, dl)[1]
     # integration limit calculation
-    IotaXp = 10 ** -8
+    IotaXp = 10 ** -20
     while Ixp(IotaXp, 0, 0) > 10 ** -20 * Ixp(0, 0, 0):
         IotaXp = IotaXp * 2
-    IotaYp = 10 ** -8
+    IotaYp = 10 ** -20
     while Iyp(IotaYp, 0, 0) > 10 ** -20 * Iyp(0, 0, 0):
         IotaYp = IotaYp * 2
     if Ixp(0, 0, 0) == Ixp(0, 100, 0):
@@ -589,16 +589,16 @@ def Sigma1_MaxFluxL_FluxPhi():
     Ix = lambda x, xp, dl: SourceCreation(x, xp, 0, 0, dl)[0]
     Iy = lambda y, yp, dl: SourceCreation(0, 0, y, yp, dl)[1]
     #integration limit calculation
-    IotaX = 10 ** -8
+    IotaX = 10 ** -20
     while Ix(IotaX, 0, 0) > 10 ** -20 * Ix(0, 0, 0):
         IotaX = IotaX * 2
-    IotaXp = 10 ** -8
+    IotaXp = 10 ** -20
     while Ix(0, IotaXp, 0) > 10 ** -20 * Ix(0, 0, 0):
         IotaXp = IotaXp * 2
-    IotaY = 10 ** -8
+    IotaY = 10 ** -20
     while Iy(IotaY, 0, 0) > 10 ** -20 * Iy(0, 0, 0):
         IotaY = IotaY * 2
-    IotaYp = 10 ** -8
+    IotaYp = 10 ** -20
     while Iy(0, IotaYp, 0) > 10 ** -20 * Iy(0, 0, 0):
         IotaYp = IotaYp * 2
     if Ix(0, 0, 0) == Ix(0, 0, 100):  # you check the dependancy on dl
@@ -653,27 +653,3 @@ def Sigma1_MaxFluxL_FluxPhi():
         print("Computation time too long, DeltaLambda variation on both axis -> not possible")
         return 0
 print(Sigma1_MaxFluxL_FluxPhi())
-
-
-
-
-# i dont really know what these functions are for
-#
-# # Integrations
-# # Beam Size
-#
-# # def IntegralXXP():
-# #     NewSourceX = NewSource2()[0]
-# #     if sp.diff(NewSourceX, dl) == 0:
-# #         return 1
-# #     else:
-# #         return sp.integrate(NewSourceX, (dl, -np.inf, np.inf))
-# # print(IntegralXXP())
-# #
-# # def IntegralYYP():
-# #     NewSourceY = NewSource2()[1]
-# #     if sp.diff(NewSourceY, dl) == 0:
-# #         return 1
-# #     else:
-# #         return sp.integrate(NewSourceY, (dl, -np.inf, np.inf))
-# # print(IntegralYYP())

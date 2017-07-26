@@ -3,7 +3,6 @@ from numpy import exp
 from numpy import pi
 from numpy import sqrt
 from numpy import log
-from numpy import sin
 import numpy.testing as nut
 import scipy.integrate as si
 import mpmath as mp
@@ -17,22 +16,22 @@ def MatrixFlight(L):                                                   # For a f
 def MatrixMonoPlane(b, ThetaB):                                         # For a perfect flat crystal monochromator
     return np.array([[b,0,0],[0,1/b,(1-1/b)*np.tan(ThetaB)],[0,0,1]])
 
-def MatrixMonoBent(b, ThetaB, Fc):                                     # For a perfect curved crystal monochromator (meridionally and sagitally focusing)
+def MatrixMonoBent(b, Fc, ThetaB):                                     # For a perfect curved crystal monochromator (meridionally and sagitally focusing)
     return np.array([[b,0,0],[1/Fc,1/b,(1-1/b)*np.tan(ThetaB)],[0,0,1]])
 
 def MatrixMonoMosaic(ThetaB):                                             # For a mosaic monochromator
     return np.array([[1,0,0],[0,-1,2*np.tan(ThetaB)],[0,0,1]])
 
-def MatrixMirrorPlane(Sigma,IncAng, Lambda, Delta):                      # For the plane mirror
+def MatrixMirrorPlane(IncAng, Sigma, Lambda, Delta):                      # For the plane mirror
     return exp(-(4*pi*np.sin(IncAng)*Sigma/Lambda)**2)*np.array([[1,0,0],[Delta,1,0],[0,0,1]])
 
-def MatrixMirror(Fm, Sigma, IncAng, Lambda, Delta, S):                      # For the bent and toroidal mirrors
+def MatrixMirror(IncAng, Sigma, Lambda, Delta, Fm, S):                      # For the bent and toroidal mirrors
     return exp(-(4*pi*np.sin(IncAng)*Sigma/Lambda)**2)*np.array([[1,0,0],[(1+S*Fm*Delta)/Fm,1,0],[0,0,1]])
 
 def MatrixCompLensPara(F):                                                 # For the compound refractive lenses with parabolic holes
     return np.array([[1,0,0],[1/F,1,0],[0,0,1]])
 
-def MatrixCompLensCirc(F, Coef):                                           # For the compound refractive lenses with circular holes
+def MatrixCompLensCirc(Coef, F):                                           # For the compound refractive lenses with circular holes
     return np.array([[1,0,0],[Coef/F,1,0],[0,0,1]])
 
 def MatrixMultilayer(Fmu):                                                  # For the multilayer
@@ -63,34 +62,34 @@ def AcceptanceSlit(y, Aperture, calctype):                                      
 def AcceptancePin(y, Diameter):                                                            #Pinhole acceptance
     return sqrt(8/pi) * exp ( -(y/Diameter)**2/2*16 )
 
-def AcceptanceAngleMonoPlane(yp, DeltaLambda, ThetaB, Wd, RMono, RInt):                #Plane monochromator angle acceptance
+def AcceptanceAngleMonoPlane(RMono, RInt, Wd, yp, DeltaLambda, ThetaB):                #Plane monochromator angle acceptance
     return RMono*RInt*sqrt(6/pi)/Wd * exp( -(yp-DeltaLambda*np.tan(ThetaB))**2 / (2*Wd**2/12))
 
 def AcceptanceWaveMonoPlane(DeltaLambda, SigmaYp, ThetaB, Wd):                        #Plane monochromator wave acceptance
     return sqrt(6/pi) * exp( - (DeltaLambda)**2 / (2*(SigmaYp**2+Wd**2/12)*cotan(ThetaB)**2) )
 
-def AcceptanceAngleMonoMosaic(yp, DeltaLambda, ThetaB, eta, RInt):                       #Mosaic monochromator angular acceptance
+def AcceptanceAngleMonoMosaic(RInt, eta, yp, DeltaLambda, ThetaB):                       #Mosaic monochromator angular acceptance
     return RInt*sqrt(6/pi)/eta * exp(- (yp-DeltaLambda*np.tan(ThetaB))**2 / eta**2 /2 )
 
-def AcceptanceWaveMonoMosaic(DeltaLambda, SigmaYp, ThetaB, eta):                        #Mosaic monochromator wave acceptance
+def AcceptanceWaveMonoMosaic(DeltaLambda, SigmaYp, eta, ThetaB):                        #Mosaic monochromator wave acceptance
     return sqrt(6/pi) * exp( - (DeltaLambda)**2 / 2 /((SigmaYp**2+eta**2)*cotan(ThetaB)**2))
 
-def AcceptanceAngleMonoBent(y, yp, DeltaLambda, Alpha, ThetaB, Wd, r, RMono, RInt):    #Curved monochromator angle acceptance
+def AcceptanceAngleMonoBent(RMono, RInt, Wd,yp, y, r, ThetaB, Alpha, DeltaLambda ):    #Curved monochromator angle acceptance
     return RMono*RInt*sqrt(6/pi)/Wd * exp( - (yp-y/r/np.sin(ThetaB+Alpha)-DeltaLambda*np.tan(ThetaB))**2/(2*Wd**2/12))
 
-def AcceptanceWaveMonoBent(DeltaLambda, ThetaB, DistanceFromSource, Wd, SigmaSource):  #Curved monochromator wave acceptance
+def AcceptanceWaveMonoBent(DeltaLambda, ThetaB, SigmaSource, DistanceFromSource, Wd):  #Curved monochromator wave acceptance
     return sqrt(6/pi) * exp( -(DeltaLambda)**2 / (2*cotan(ThetaB)**2*((SigmaSource/DistanceFromSource)**2+Wd**2/12))   )
 
 def AcceptanceCompLensPara(x, Radius, Distance, Sigma):                                          #Compound refractive lense with parabolic holes acceptance
     return exp( -(x**2+Radius*Distance)/2/Sigma**2)
 
-def AcceptanceCompLensCirc(x, Radius, Distance, Sigma, FWHM):                                    #Compound refractive lense with circular holes acceptance
+def AcceptanceCompLensCirc(x, Sigma, FWHM, Radius, Distance):                                    #Compound refractive lense with circular holes acceptance
     return exp( -x**2/2/Sigma**2 -x**2*FWHM**2/8/Radius**2/Sigma**2 -x**2*FWHM**4/16/Sigma**2/Radius**4 -Radius*Distance/2/Sigma**2  )
 
-def AcceptanceAngleMulti(y, yp, DeltaLambda, ThetaML, Rml, Rowland, Ws):                #Multilayer angle acceptance
+def AcceptanceAngleMulti(Rml, yp, y, Rowland, ThetaML, DeltaLambda, Ws):                #Multilayer angle acceptance
     return Rml*8/3*sqrt(log(2)/pi) * exp( -(-yp-y/Rowland/np.sin(ThetaML)-DeltaLambda*np.tan(ThetaML))**2*8*log(2)/2/Ws**2 )
 
-def AcceptanceWaveMulti(DeltaLambda, ThetaML, DistanceFromSource, Ws, SigmaSource):     #Multilayer wave acceptance
+def AcceptanceWaveMulti(DeltaLambda, SigmaSource, DistanceFromSource, Ws, ThetaML):     #Multilayer wave acceptance
     return sqrt(6/pi) * exp( -(DeltaLambda)**2/2/((SigmaSource/DistanceFromSource)**2+Ws**2/8/log(2))/cotan(ThetaML)**2)
 
 #TESTING THE FUNCTIONS
@@ -113,7 +112,7 @@ def testMatrixMonoBent():
     ThetaB = 1.0
     Mat = np.array([[0.8, 0, 0], [0.5, 1.25, -0.389352], [0, 0, 1]])
     print(Mat.shape)
-    result = MatrixMonoBent(b, ThetaB, Fc)
+    result = MatrixMonoBent(b, Fc, ThetaB)
     print("Mistakes ?", nut.assert_array_almost_equal(Mat, result, decimal=5))
 print(testMatrixMonoBent())
 
@@ -134,7 +133,7 @@ def testMatrixMirrorPlane():
     Delta = 5
     Mat = np.array([[0.9402, 0, 0], [4.701, 0.9402, 0], [0, 0, 0.9402]])
     print(Mat.shape)
-    result = MatrixMirrorPlane(Sigma, IncAng, Lambda, Delta)
+    result = MatrixMirrorPlane(IncAng, Sigma, Lambda, Delta)
     print("Mistakes ?", nut.assert_array_almost_equal(Mat, result, decimal=5))
 print(testMatrixMirrorPlane())
 
@@ -148,7 +147,7 @@ def testMatrixMirror():
     S =0.1
     Mat = np.array([[0.9402, 0, 0], [0.56412, 0.9402, 0], [0, 0, 0.9402]])
     print(Mat.shape)
-    result = MatrixMirror(Fm, Sigma, IncAng, Lambda, Delta, S)
+    result = MatrixMirror(IncAng, Sigma, Lambda, Delta, Fm, S)
     print("Mistakes ?", nut.assert_array_almost_equal(Mat, result, decimal=5))
 print(testMatrixMirror())
 
@@ -167,7 +166,7 @@ def testMatrixCompLensCirc():
     Coef = 0.4
     Mat = np.array([[1, 0, 0], [0.0325203, 1, 0], [0, 0, 1]])
     print(Mat.shape)
-    result = MatrixCompLensCirc(F, Coef)
+    result = MatrixCompLensCirc(Coef, F)
     print("Mistakes ?", nut.assert_array_almost_equal(Mat, result, decimal=5))
 print(testMatrixCompLensCirc())
 
@@ -246,7 +245,7 @@ def testAcceptanceAngleMonoPlane():
     DeltaLambda = 0.2
     ThetaB = 33
     Acceptance = 0.00214474
-    result = AcceptanceAngleMonoPlane(yp, DeltaLambda, ThetaB, Wd, RMono, RInt)
+    result = AcceptanceAngleMonoPlane(RMono, RInt, Wd, yp, DeltaLambda, ThetaB)
     print(Acceptance, result)
     print("Mistakes ?", nut.assert_almost_equal(Acceptance, result, decimal=5))
 print(testAcceptanceAngleMonoPlane())
@@ -272,7 +271,7 @@ def testAcceptanceAngleMonoMosaic():
     DeltaLambda = 0.2
     ThetaB = 33
     Acceptance = 0.00264987
-    result = AcceptanceAngleMonoMosaic(yp, DeltaLambda,ThetaB, eta, RInt)
+    result = AcceptanceAngleMonoMosaic(RInt, eta, yp, DeltaLambda, ThetaB)
     print(Acceptance, result)
     print("Mistakes ?", nut.assert_almost_equal(Acceptance, result, decimal=5))
 print(testAcceptanceAngleMonoMosaic())
@@ -284,7 +283,7 @@ def testAcceptanceWaveMonoMosaic():
     DeltaLambda = 0.2
     ThetaB = 33
     Acceptance = 1.36733
-    result = AcceptanceWaveMonoMosaic(DeltaLambda, SigmaYp, ThetaB, eta)
+    result = AcceptanceWaveMonoMosaic(DeltaLambda, SigmaYp, eta, ThetaB)
     print(Acceptance, result)
     print("Mistakes ?", nut.assert_almost_equal(Acceptance, result, decimal=5))
 print(testAcceptanceWaveMonoMosaic())
@@ -301,7 +300,7 @@ def testAcceptanceAngleMonoBent():
     DeltaLambda = 0.2
     ThetaB = 33
     Acceptance = 0.00218093
-    result = AcceptanceAngleMonoBent(y, yp, DeltaLambda, Alpha, ThetaB, Wd, r, RMono, RInt)
+    result = AcceptanceAngleMonoBent(RMono, RInt, Wd, yp, y, r, ThetaB, Alpha, DeltaLambda)
     print(Acceptance, result)
     print("Mistakes ?", nut.assert_almost_equal(Acceptance, result, decimal=5))
 print(testAcceptanceAngleMonoBent())
@@ -314,7 +313,7 @@ def testAcceptanceWaveMonoBent():
     DeltaLambda = 0.2
     ThetaB = 33
     Acceptance = 1.38197
-    result = AcceptanceWaveMonoBent(DeltaLambda, ThetaB, DistanceFromSource, Wd, SigmaSource)
+    result = AcceptanceWaveMonoBent(DeltaLambda, ThetaB, SigmaSource, DistanceFromSource, Wd)
     print(Acceptance, result)
     print("Mistakes ?", nut.assert_almost_equal(Acceptance, result, decimal=5))
 print(testAcceptanceWaveMonoBent())
@@ -339,7 +338,7 @@ def testAcceptanceCompLensCirc():
     FWHM = 43.3
     Sigma = 33.3
     Acceptance = 0.471079
-    result = AcceptanceCompLensCirc(x, Radius, Distance, Sigma, FWHM)
+    result = AcceptanceCompLensCirc(x, Sigma, FWHM, Radius, Distance)
     print(Acceptance, result)
     print("Mistakes ?", nut.assert_almost_equal(Acceptance, result, decimal=5))
 print(testAcceptanceCompLensCirc())
@@ -354,7 +353,7 @@ def testAcceptanceAngleMulti():
     DeltaLambda = 1
     Ws = 0.7
     Acceptance = 0.0000541429
-    result = AcceptanceAngleMulti(y, yp, DeltaLambda, ThetaML, Rml, Rowland, Ws)
+    result = AcceptanceAngleMulti(Rml, yp, y, Rowland, ThetaML, DeltaLambda, Ws)
     print(Acceptance, result)
     print("Mistakes ?", nut.assert_almost_equal(Acceptance, result, decimal=5))
 print(testAcceptanceAngleMulti())
@@ -367,123 +366,69 @@ def testAcceptanceWaveMulti():
     DistanceFromSource = 22
     SigmaSource = 45
     Acceptance = 1.04044
-    result = AcceptanceWaveMulti(DeltaLambda, ThetaML, DistanceFromSource, Ws, SigmaSource)
+    result = AcceptanceWaveMulti(DeltaLambda, SigmaSource, DistanceFromSource, Ws, ThetaML)
     print(Acceptance, result)
     print("Mistakes ?", nut.assert_almost_equal(Acceptance, result, decimal=5))
 print(testAcceptanceWaveMulti())
 
 
-
-
-
 # todo Single slit example
-# number of elements in the device : n
 
 z0 = 10000
-z1 = 20000
+z1 = 12000
 Flight_paths_in_order = [z0,z1]
-
-#Slit data
-# AperturSlitX0 = 20
-# AperturSlitY0 = 30
-# Slit = [AperturSlitX0, AperturSlitY0, np.eye(3), 0]
-#Mono data
-# Alpha0  = 0
-# Wd0     = 1.000000*10**-6
-# WidthX0 = 2.000000*10**1
-# WidthY0 = 2.000000*10**1
-# RMono0  = 9.600000*10**-1
-# Rint0   = 1.000000*10**-5
-# thetaB0 = 1.140288*10**1 * pi /180
-# bMono0  = sin(thetaB0+Alpha0)/sin(thetaB0-Alpha0)
-# Mono = [Alpha0, Wd0, WidthX0, WidthY0,RMono0, Rint0, thetaB0, bMono0, MatrixMonoPlane(bMono0, thetaB0), np.eye(3) ]
-#MIrror data
-# Sigma0 = 0
-# Delta0 = 1.000000*10**-7
-# IncAng0 = 0
-# Lambda0 = 1.127140*10**-7
-# Fm0 = 8.333333*10**3
-# S = 1
-# Mirror = [np.eye(3), MatrixMirror(Fm0, Sigma0, IncAng0, Lambda0, Delta0, S)]
-
-
-ListObject = ['']
-MatTabX = [MatrixFlight(z0), Mirror[-2], MatrixFlight(z1)]
-MatTabY = [MatrixFlight(z0), Mirror[-1], MatrixFlight(z1)]
+AperturSlitX0 = 20
+AperturSlitY0 = 30
+Slit = [AperturSlitX0, AperturSlitY0, np.eye(3), 0]
+MatTab = [MatrixFlight(z0), Slit[2], MatrixFlight(z1)]
 ObjectList = [Slit]
+dlBoundaries = [-10**-6,10**-6]
 CoefMonoX = 1
 CoefMonoY = 1
 CoefAtten = 1
 SourceI = 1e25
-SigmaYPSource = 10**-4
-bMonoX  = 1
-bMonoY = 1
-
-# class Object:
-#     def __init__(self):
-#         self.type = "Mirror"
-#     Object.Matrix = MatrixMirror
-
-
 
 def SourceCreation(x, xp, y, yp, dl):
-    MX = MatTabX.copy()
-    MY = MatTabY.copy()
+    M = MatTab.copy()
     MatTempX = np.array([x,xp,dl])
     MatTempY = np.array([y, yp, dl])
-    if len(MX)==1:
-        MatTempX = np.dot(MX[0], MatTempX)
-        MatTempY = np.dot(MY[0], MatTempY)
+    if len(M)==1:
+        MatTempX = np.dot(MatrixFlight(z0), MatTempX)
+        MatTempY = np.dot(MatrixFlight(z0), MatTempY)
         NewSourceX = SourceXXP(MatTempX[0], MatTempX[1])
         NewSourceY = SourceYYP(MatTempY[0], MatTempY[1])
     else :
-        for i in range(len(MX)-1, -1, -1):
-            MatTempX = np.dot(MX[i], MatTempX)
-            MatTempY = np.dot(MY[i], MatTempY)
+        for i in range(len(M)-1, -1, -1):
+            MatTempX = np.dot(M[i], MatTempX)
+            MatTempY = np.dot(M[i], MatTempY)
         NewSourceX = SourceXXP(MatTempX[0], MatTempX[1])
         NewSourceY = SourceYYP(MatTempY[0], MatTempY[1])
-        del MX[0]
-        del MY[0]
-        k = 0
-        while MX!=[] and MY!=[]:
-            for i in range(len(MX)-1,-1,-1):
-                MatTempX = np.dot(MX[i],MatTempX)
-                MatTempY = np.dot(MY[i], MatTempY)
-            if ListObject[k] == 'Slit':
-                NewSourceX = NewSourceX * AcceptanceSlit(MatTempX[0], Slit[0], Slit[3])
-                NewSourceY = NewSourceY * AcceptanceSlit(MatTempY[0], Slit[1], Slit[3])
-            elif ListObject[k] == 'MonoPlaneVertical':
-                NewSourceY = NewSourceY * AcceptanceAngleMonoPlane(MatTempY[1], MatTempY[2], thetaB0, Wd0, RMono0, Rint0)
-                NewSourceY = NewSourceY * AcceptanceWaveMonoPlane(MatTempY[2], bMonoY*SigmaYPSource, thetaB0, Wd0)
-            elif ListObject[k] == 'MonoPlaneHorizontal':
-                NewSourceX = NewSourceX * AcceptanceAngleMonoPlane(MatTempX[1], MatTempX[2], thetaB0, Wd0, RMono0, Rint0)
-                NewSourceX = NewSourceX * AcceptanceWaveMonoPlane(MatTempX[2], bMonoX*SigmaXPSource, thetaB0, Wd0)
-            k = k +1
-            del MX[0:2]
-            del MY[0:2]
-    return [NewSourceX, NewSourceY]
-
-
-# del MatTab[0:2]
-# MatCreation()
-
+        del M[0]
+        while M!=[]:
+            for i in range(len(M)-1,-1,-1):
+                MatTempX = np.dot(M[i],MatTempX)
+                MatTempY = np.dot(M[i], MatTempY)
+            NewSourceX = NewSourceX * AcceptanceSlit(MatTempX[0], Slit[0], Slit[3])
+            NewSourceY = NewSourceY * AcceptanceSlit(MatTempY[0], Slit[1], Slit[3])
+            del M[0:2]
+        return [NewSourceX, NewSourceY]
 
 def BeamGeoSize():
     Ix = lambda xp, dl, x : SourceCreation(x, xp, 0, 0, dl)[0]
     Iy = lambda yp, dl, y : SourceCreation(0,0, y, yp, dl)[1]
     # integration limit calculation
-    IotaXp = 10 ** -8
+    IotaXp = 10 ** -7
     while Ix(IotaXp, 0, 0) > 10 ** -20 * Ix(0, 0, 0):
         IotaXp = IotaXp * 2
-    IotaYp = 10 ** -8
+    IotaYp = 10 ** -7
     while Iy(IotaYp, 0, 0) > 10 ** -20 * Iy(0, 0, 0):
         IotaYp = IotaYp * 2
     #
     if Ix(0,0,0) == Ix(0,100,0): #you check the dependancy on dl
         print("Lambda is affected to x")
         IYint = lambda yp, dl, y : Iy(yp, dl, y) * SourceLambda(dl, SigmaSLambda=1e-3) * SourceI
-        IotaYdl = 10**-8
-        while IYint(0, IotaYdl, 0) > 10**-20 * IYint(0,0,0) :
+        IotaYdl = 10**-7
+        while IYint(0, IotaYdl, 0) > 10**-10 * IYint(0,0,0) :
             IotaYdl = IotaYdl * 2
         print('The integration limits are :', [IotaXp, IotaYp, IotaYdl])
         # we are going to do 4 integrations : along xp and dl with x = {0,10**-2}, along yp and dl with y = {0,10**-2}
@@ -500,7 +445,6 @@ def BeamGeoSize():
         ValueAY = ValueAX
         ValueExponentX = IyIntegrated_0 * IxIntegrated_E2
         ValueExponentY = IxIntegrated_0 * IyIntegrated_E2
-        print('ValueExponentY is :', ValueExponentY)
         SigmaX = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) * (10 ** -4) / -log(ValueExponentX / ValueAX))
         SigmaY = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) * (10 ** -4) / -log(ValueExponentY / ValueAY))
         return [SigmaX, SigmaY]
@@ -533,19 +477,18 @@ def BeamAngularSize():
     Ixp = lambda x, dl, xp: SourceCreation(x, xp, 0, 0, dl)[0]
     Iyp = lambda y, dl, yp : SourceCreation(0,0, y, yp, dl)[1]
     # integration limit calculation
-    IotaXp = 10 ** -8
-    while Ixp(IotaXp, 0, 0) > 10 ** -20 * Ixp(0, 0, 0):
+    IotaXp = 10 ** -7
+    while Ixp(IotaXp, 0, 0) > 10 ** -10 * Ixp(0, 0, 0):
         IotaXp = IotaXp * 2
-    IotaYp = 10 ** -8
-    while Iyp(IotaYp, 0, 0) > 10 ** -20 * Iyp(0, 0, 0):
+    IotaYp = 10 ** -7
+    while Iyp(IotaYp, 0, 0) > 10 ** -10 * Iyp(0, 0, 0):
         IotaYp = IotaYp * 2
     if Ixp(0, 0, 0) == Ixp(0, 100, 0):
         IYpint = lambda y, dl, yp : Iyp(y, dl, yp) * SourceLambda(dl, SigmaSLambda=1e-3) * SourceI
-        IotaYdl = 10**-8
+        IotaYdl = 10**-7
         while IYpint(0, IotaYdl, 0) > 10**-10 * IYpint(0,0,0):
             IotaYdl = IotaYdl * 2
         print('Integration limits are :', [IotaXp,IotaYp, IotaYdl])
-        print(">>>>>>>>>>>>>>>>>>>",IYpint(0,0,0), IYpint(0,10**-3,0))
         #Integrations
         IxpIntegrated_0 = si.quad(Ixp, -IotaXp, IotaXp, args=(0, 0))[0]
         IxpIntegrated_E6 = si.quad(Ixp, -IotaXp, IotaXp, args=(0, 10 ** -6))[0]
@@ -589,22 +532,21 @@ def Sigma1_MaxFluxL_FluxPhi():
     Ix = lambda x, xp, dl: SourceCreation(x, xp, 0, 0, dl)[0]
     Iy = lambda y, yp, dl: SourceCreation(0, 0, y, yp, dl)[1]
     #integration limit calculation
-    IotaX = 10 ** -8
+    IotaX = 10 ** -7
     while Ix(IotaX, 0, 0) > 10 ** -20 * Ix(0, 0, 0):
         IotaX = IotaX * 2
-    IotaXp = 10 ** -8
+    IotaXp = 10 ** -7
     while Ix(0, IotaXp, 0) > 10 ** -20 * Ix(0, 0, 0):
         IotaXp = IotaXp * 2
-    IotaY = 10 ** -8
+    IotaY = 10 ** -7
     while Iy(IotaY, 0, 0) > 10 ** -20 * Iy(0, 0, 0):
         IotaY = IotaY * 2
-    IotaYp = 10 ** -8
+    IotaYp = 10 ** -7
     while Iy(0, IotaYp, 0) > 10 ** -20 * Iy(0, 0, 0):
         IotaYp = IotaYp * 2
     if Ix(0, 0, 0) == Ix(0, 0, 100):  # you check the dependancy on dl
-        print("Lambda is affected to x")
         IYint = lambda y, yp, dl: Iy(y, yp, dl) * SourceLambda(dl, SigmaSLambda=1e-3) * SourceI
-        IotaYdl = 10 ** -8
+        IotaYdl = 10 ** -7
         while IYint(0, 0, IotaYdl) > 10 ** -20 * IYint(0, 0, 0):
             IotaYdl = IotaYdl * 2
         print('Integration limits are :', [IotaX, IotaY, IotaXp, IotaYp, IotaYdl])
@@ -612,7 +554,7 @@ def Sigma1_MaxFluxL_FluxPhi():
         IxIntegrated = si.nquad(Ix, [[-IotaX, IotaX], [-IotaXp, IotaXp]], args=(0,))[0]
         IyIntegrated_0 = si.nquad(IYint, [[-IotaY, IotaY], [-IotaYp, IotaYp]], args=(0,))[0]
         IyIntegrated_E3 = si.nquad(IYint, [[-IotaY, IotaY], [-IotaYp,IotaYp]], args=(10 ** -3,))[0]
-        print('IxIntegrated is :', IxIntegrated, 'Other values :', IyIntegrated_0,IyIntegrated_E3 )
+        print('IxIntegrated is :', IxIntegrated)
         # ValueAL needs dl = 0, so we set it to 0 during the integration
         ValueAL = IxIntegrated * IyIntegrated_0
         print(" ValueAL gives :", ValueAL)
@@ -653,27 +595,3 @@ def Sigma1_MaxFluxL_FluxPhi():
         print("Computation time too long, DeltaLambda variation on both axis -> not possible")
         return 0
 print(Sigma1_MaxFluxL_FluxPhi())
-
-
-
-
-# i dont really know what these functions are for
-#
-# # Integrations
-# # Beam Size
-#
-# # def IntegralXXP():
-# #     NewSourceX = NewSource2()[0]
-# #     if sp.diff(NewSourceX, dl) == 0:
-# #         return 1
-# #     else:
-# #         return sp.integrate(NewSourceX, (dl, -np.inf, np.inf))
-# # print(IntegralXXP())
-# #
-# # def IntegralYYP():
-# #     NewSourceY = NewSource2()[1]
-# #     if sp.diff(NewSourceY, dl) == 0:
-# #         return 1
-# #     else:
-# #         return sp.integrate(NewSourceY, (dl, -np.inf, np.inf))
-# # print(IntegralYYP())
