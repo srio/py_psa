@@ -22,19 +22,29 @@ Standard values :
     Rint : 1e-5 rad
 
 Results for single vertical monochromator :
-    Flux = 5.61078e10 photon/s
+    Flux = 5.17086*10**10 photon/s
     FWHMx = 2.13238 mm
-    FWHMy = 4.65870 mm
+    FWHMy = 4.71409 mm
     FWHMx' = 70.644600 mrad
-    FWHMy' = 155.28800 mrad
-    FWMHlambda = 8.499200e-4
+    FWHMy' = 157.13400 mrad
+    FWMHlambda = 7.790960*10**-4
+    Sigmax = 9.05538410e-01
+    sigmay = 2.00188970
+    Sigmax'= 2.99999994e+01
+    Sigmay'= 6.67286659e+01
+    SigmaLambda = 3.30851609e-04
 Results for single horizontal monochromator :
-    Flux = 1.40101e9 photon/s
-    FWHMx = 0.238406 mm
-    FWHMy = 0.235275 mm
-    FWHMx' = 0.96123700 mrad
-    FWHMy' = 0.96131800 mrad
-    FWMHlambda =2.602800e-4
+    Flux = 5.95495 photon/s
+    FWHMx = 1.50718 mm
+    FWHMy = 7.06450 mm
+    FWHMx' = 49.622300 mrad
+    FWHMy' = 235.48200 mrad
+    FWMHlambda = 2.715920e-4
+    Sigmax = 6.40040415e-01
+    sigmay = 3.00001693e+00
+    Sigmax'= 2.10726506e+01
+    Sigmay'= 9.99999981e+01
+    SigmaLambda = 1.15334503e-04
 
     Flux = photon/s
     FWHMx = mm
@@ -42,3 +52,36 @@ Results for single horizontal monochromator :
     FWHMx' =  mrad
     FWHMy' = mrad
     FWMHlambda =
+
+Slit
+Distance from source : 22000mm
+Item position : 10000mm
+
+Standard values :
+    Flux = 4.24833*10**12 photon/s
+    FWHMx = 1.56964 mm
+    FWHMy = 5.14646 mm
+    FWHMx' = 70.549500 mrad
+    FWHMy' = 233.92800 mrad
+    FWMHlambda = 2.354820*10**-3
+    Sigmax = 6.66564735e-01
+    sigmay = 2.18549439
+    Sigmax'= 2.99596142e+01
+    Sigmay'= 9.93400750e+01
+    SigmaLambda = 9.99999981e-04
+
+Simple propagation example :
+Distance from source : 20000
+    Flux = 2.96873*10**12 photon/s
+    Sigmax = 6.08275780e-01
+    sigmay =  2.00002544
+    Sigmax'= 2.99999994e+01
+    Sigmay'= 9.99999981e+01
+    SigmaLambda = 9.99999981e-04
+Experimental results
+    Flux =  103214009918.3561 photon/s
+    Sigmax = 0.608241502880818
+    sigmay =  2.00002499983074
+    Sigmax'= 29.999999999993598
+    Sigmay'= 100.00000000006982
+    SigmaLambda = 0.001
