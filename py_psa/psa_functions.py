@@ -94,8 +94,7 @@ def acceptanceWaveMulti(DeltaLambda, ThetaML, DistanceFromSource, Ws, SigmaSourc
     return sqrt(6/pi) * exp( -(DeltaLambda)**2/2/((SigmaSource/DistanceFromSource)**2+Ws**2/8/log(2))/cotan(ThetaML)**2)
 
 
-
-#Calculation part
+# Useful functions for the calculation part
 
 def propagateMatrixList(x, xp, y, yp, dl, SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX, MatTabY, ListObject, bMonoX, bMonoY):
     # initiating variables, copies of the arrays are created
@@ -142,16 +141,15 @@ def propagateMatrixList(x, xp, y, yp, dl, SigmaXSource, SigmaXPSource, SigmaYSou
             del MY[0:2]
     return [NewSourceX, NewSourceY]
 
-def sourceFinal(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY):
+def sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY):
     IXXP = lambda x, xp, dl : propagateMatrixList(x, xp, 0, 0, dl, SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX, MatTabY, ListObject, bMonoX, bMonoY)[0]
     IYYP = lambda y, yp, dl : propagateMatrixList(0, 0, y, yp, dl, SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX, MatTabY, ListObject, bMonoX, bMonoY)[1]
     ISigma = lambda dl : sourceLambda(dl, SigmaSLambda) * SourceI
     return IXXP,IYYP, ISigma
 
-def calculateLimits(IXXP, IYYP, ISigma, SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda):
+def calculateLimits(IXXP, IYYP, ISigma):
     # We need to minimize calculation time and maximize precision and avoid empty
     # sampling. So we determine the boundaries of our gaussians with a quick algorithm.
-    # Simple integration limit calculation :
     IotaX = 10 ** -8
     while IXXP(IotaX, 0, 0) > 10 ** -15 * IXXP(0, 0, 0):
         IotaX = IotaX * 2
@@ -172,8 +170,8 @@ def calculateLimits(IXXP, IYYP, ISigma, SigmaXSource, SigmaXPSource, SigmaYSourc
         IotaYp = IotaYp * 2
     IotaYp = IotaYp * 2
 
-    IXint = lambda x, xp, dl : IXXP(x, xp, dl) * ISigma
-    IYint = lambda y, yp, dl : IYYP(y, yp, dl) * ISigma
+    IXint = lambda x, xp, dl : IXXP(x, xp, dl) * ISigma(dl)
+    IYint = lambda y, yp, dl : IYYP(y, yp, dl) * ISigma(dl)
 
     IotaYdl = 10 ** -8
     while IYint(0, 0, IotaYdl) > 10 ** -15 * IYint(0, 0, 0):
@@ -183,22 +181,38 @@ def calculateLimits(IXXP, IYYP, ISigma, SigmaXSource, SigmaXPSource, SigmaYSourc
     while IXint(0, IotaXdl, 0) > 10 ** -15 * IXint(0, 0, 0):
         IotaXdl = IotaXdl * 2
 
-    #double integral limit calculation :
-
-
-    print('Integration limits divided by the source Sigmas :',
-          [IotaX / SigmaXSource, IotaY / SigmaYSource, IotaXp / SigmaXPSource, IotaYp / SigmaYPSource, IotaXdl/SigmaSLambda, IotaYdl/SigmaSLambda])
     return [IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl]
+
+def comparisonSourceBoundaries(IXXP, IYYP, ISigma, SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda):
+    [IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl] = calulateLimits(IXXP, IYYP, ISigma)
+    print('Integration limits divided by the source Sigmas :',
+          [IotaX / SigmaXSource, IotaY / SigmaYSource, IotaXp / SigmaXPSource, IotaYp / SigmaYPSource,
+           IotaXdl / SigmaSLambda, IotaYdl / SigmaSLambda])
 
 def calculateBetterLimits(f, Eval, SigmaSource1, SigmaSource2, Epsilon ):
     Iota1 = SigmaSource1
     Iota2 = SigmaSource2
     while si.quad(f, -Iota1, Iota1, args=(Iota2, Eval))[0] / f(0, 0, 0) > Epsilon:
         Iota2 = Iota2 * 2
-    fPerm = lambda x, y, z: (y, x, z)
+    fPerm = lambda x, y, z: f(y, x, z)
     while si.quad(fPerm, -Iota2, Iota2, args=(Iota1, Eval))[0] / f(0, 0, 0) > Epsilon:
         Iota1 = Iota1 * 2
     return Iota1, Iota2
+
+def calculateUltimatelyBetterLimitsLikeSuperAwesomeLimitsAndWayBetterthanCalculateBetterLimits(f, SigmaSource1, SigmaSource2, SigmaSource3, Epsilon):
+    [Iota1, Iota2] = calculateBetterLimits(f, 0, SigmaSource1, SigmaSource2, Epsilon)
+    fPerm1 = lambda x, y, z : f(y, z, x)
+    [Iota3, Iota4] = calculateBetterLimits(fPerm1, Iota2/4, SigmaSource2, SigmaSource3, Epsilon)
+    fPerm2 = lambda x, y, z : f(x, z, y)
+    [Iota5, Iota6] = calculateBetterLimits(fPerm2, Iota1/4, SigmaSource1, SigmaSource3, Epsilon)
+    if Iota1 < Iota5:
+        Iota1 = Iota5
+    if Iota2 < Iota3:
+        Iota2 = Iota4
+    if Iota4 < Iota6:
+        Iota4 = Iota6
+    print('The marvelous Iotas are :', Iota1, Iota2, Iota4)
+    return Iota1, Iota2, Iota4
 
 def simpleIntegralDenullification(f, k, Iota):
     Eval = k
@@ -227,17 +241,13 @@ def sigmaCalc(Eval, ValueExponent, ValueA):
 def plotXXP(IXXP, IotaX, IotaXp):
     x = np.linspace(-IotaX, IotaX, 100)
     xp = np.linspace(-IotaXp, IotaXp, 100)
-
     X = np.outer(x, np.ones_like(xp))
-    XP = np.outer(np.ones_like(x), xp)
-
     XXP = np.zeros_like(X)
 
     for ix, xval in enumerate(x):
         for ixp, xpval in enumerate(xp):
             XXP[ix, ixp] = IXXP(xval, xpval, 0)
 
-    #XXP = IXXP(X, XP, 0)
     print("Integral of XXP", XXP.sum() * (x[1] - x[0]) * (xp[1] - xp[0]))
 
     print("XXP shape", XXP.shape)
@@ -264,17 +274,13 @@ def plotXXP(IXXP, IotaX, IotaXp):
 def plotYYP(IYYP, IotaY, IotaYp):
     y = np.linspace(-IotaY, IotaY, 100)
     yp = np.linspace(-IotaYp, IotaYp, 100)
-
     Y = np.outer(y, np.ones_like(yp))
-    YP = np.outer(np.ones_like(y), yp)
-
     YYP = np.zeros_like(Y)
 
     for ix, xval in enumerate(y):
         for ixp, xpval in enumerate(yp):
             YYP[ix, ixp] = IYYP(xval, xpval, 0)
 
-    # XXP = IXXP(X, XP, 0)
     print("Integral of XXP", YYP.sum() * (y[1] - y[0]) * (yp[1] - yp[0]))
 
     print("XXP shape", YYP.shape)
@@ -298,50 +304,117 @@ def plotYYP(IYYP, IotaY, IotaYp):
     plt.title("INT vs yp")
     plt.show()
 
-def plotAnything(f, Iota1, Iota2):
+def plotAnything(f, Iota1, Iota2, Iota3, Eval, Var):
+    #f is a 3 variable function, if you want to plot :
+        # 1st and 2nd variable : Var = 12
+        # 2nd and 3rd variable : Var = 23
+        # 1st and 3rd variable : Var = 13
+
     u = np.linspace(-Iota1, Iota1, 100)
     v = np.linspace(-Iota2, Iota2, 100)
+    w = np.linspace(-Iota3, Iota3, 100)
+    X = np.outer(u, np.ones_like(v))
+    Y = np.outer(v, np.ones_like(w))
+    Z = np.outer(u, np.ones_like(w))
 
-    # X = np.outer(x, np.ones_like(xp))
-    # XP = np.outer(np.ones_like(x), xp)
+    if Var == 12:
+        Matrix = np.zeros_like(X)
+        for ix, xval in enumerate(u):
+            for ixp, xpval in enumerate(v):
+                Matrix[ix, ixp] = f(xval, xpval, Eval)
+                print("Integral of Matrix", Matrix.sum() * (u[1] - u[0]) * (v[1] - v[0]))
 
-    XXP = np.zeros_like(X)
+                print("Matrix shape", Matrix.shape)
 
-    for ix, xval in enumerate(u):
-        for ixp, xpval in enumerate(v):
-            XXP[ix, ixp] = f(xval, xpval, 0)
+                fig = plt.figure()
 
-    # XXP = IXXP(X, XP, 0)
-    print("Integral of XXP", XXP.sum() * (u[1] - u[0]) * (v[1] - v[0]))
+                # cmap = plt.cm.Greys
+                plt.imshow(Matrix.T, origin='lower', extent=[u[0], u[-1], v[0], v[-1]], cmap=None, aspect='auto')
+                plt.colorbar()
+                ax = fig.gca()
+                ax.set_xlabel("X")
+                ax.set_ylabel("Y")
 
-    print("XXP shape", XXP.shape)
+                plt.title("TITLE")
+                plt.show()
 
-    fig = plt.figure()
+                plt.plot(u, Matrix.sum(axis=1))
+                plt.title("INT vs Variable1")
+                plt.show()
+                plt.plot(v, Matrix.sum(axis=0))
+                plt.title("INT vs Variable2")
+                plt.show()
+                return
+    elif Var == 23:
+        Matrix = np.zeros_like(Y)
+        for ix, xval in enumerate(v):
+            for ixp, xpval in enumerate(w):
+                Matrix[ix, ixp] = f(Eval, xval, xpval)
+                print("Integral of Matrix", Matrix.sum() * (v[1] - v[0]) * (w[1] - w[0]))
 
-    # cmap = plt.cm.Greys
-    plt.imshow(XXP.T, origin='lower', extent=[u[0], u[-1], v[0], v[-1]], cmap=None, aspect='auto')
-    plt.colorbar()
-    ax = fig.gca()
-    ax.set_xlabel("X")
-    ax.set_ylabel("Y")
+                print("Matrix shape", Matrix.shape)
 
-    plt.title("TITLE")
-    plt.show()
+                fig = plt.figure()
 
-    plt.plot(x, XXP.sum(axis=1))
-    plt.title("INT vs u")
-    plt.show()
-    plt.plot(xp, XXP.sum(axis=0))
-    plt.title("INT vs v")
-    plt.show()
+                # cmap = plt.cm.Greys
+                plt.imshow(Matrix.T, origin='lower', extent=[v[0], v[-1], w[0], w[-1]], cmap=None, aspect='auto')
+                plt.colorbar()
+                ax = fig.gca()
+                ax.set_xlabel("X")
+                ax.set_ylabel("Y")
+
+                plt.title("TITLE")
+                plt.show()
+
+                plt.plot(v, Matrix.sum(axis=1))
+                plt.title("INT vs Variable1")
+                plt.show()
+                plt.plot(w, Matrix.sum(axis=0))
+                plt.title("INT vs Variable2")
+                plt.show()
+                return
+    elif Var == 13:
+        Matrix = np.zeros_like(Z)
+        for ix, xval in enumerate(u):
+            for ixp, xpval in enumerate(w):
+                Matrix[ix, ixp] = f(xval, Eval, xpval)
+                print("Integral of Matrix", Matrix.sum() * (u[1] - u[0]) * (w[1] - w[0]))
+
+                print("Matrix shape", Matrix.shape)
+
+                fig = plt.figure()
+
+                # cmap = plt.cm.Greys
+                plt.imshow(Matrix.T, origin='lower', extent=[u[0], u[-1], w[0], w[-1]], cmap=None, aspect='auto')
+                plt.colorbar()
+                ax = fig.gca()
+                ax.set_xlabel("X")
+                ax.set_ylabel("Y")
+
+                plt.title("TITLE")
+                plt.show()
+
+                plt.plot(u, Matrix.sum(axis=1))
+                plt.title("INT vs Variable1")
+                plt.show()
+                plt.plot(w, Matrix.sum(axis=0))
+                plt.title("INT vs Variable2")
+                plt.show()
+                return
+    else:
+        print("Var can only take the values 12, 23 or 13. Try again bro !")
+        return 0
 
 
+# Where the magic happens...
 
-def beamGeoSize(IXXP,IYYP,ISigma, do_plot=True):  # the two next functions are similar to this model
+def beamGeoSize(IXXP,IYYP,ISigma, SigmaXPSource, SigmaYPSource, SigmaSLambda):  # the two next functions are similar to this model
     # creating the functions to integrate, we need to redo this every time because the integration functions integrate
     # using the order in which the parameters are input, like it will integrate Ix in this order : xp, dl and then x
     Ix = lambda xp, dl, x : IXXP(x, xp, dl)
     Iy = lambda yp, dl, y : IYYP(y, yp, dl)
+    #Now we get ze integration boundaries
+    [IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl] = calculateLimits(IXXP, IYYP, ISigma)
     # Again, to minimize integration, we calculate the integrals of I = Ix*Iy*Idl separately, do do that, we need to
     # check that either Ix or Iy does not depend on dl, thus the next test
     if Ix(0,0,0) == Ix(0,100,0): #we check the dependancy on dl, Ix being similar to a gaussian (the bijectivity of a gaussian
@@ -381,44 +454,6 @@ def beamGeoSize(IXXP,IYYP,ISigma, do_plot=True):  # the two next functions are s
         SigmaX = sigmaCalc(XEval, ValueExponentX, ValueAX)
         SigmaY = sigmaCalc(YEval, ValueExponentY, ValueAY)
 
-        if do_plot == True:
-            yp = np.linspace(-IotaYp, IotaYp, 100)
-            Ydl = np.linspace(-IotaYdl, IotaYdl, 100)
-
-            X = np.outer(yp, np.ones_like(Ydl))
-            XP = np.outer(np.ones_like(yp), Ydl)
-
-            XXP = np.zeros_like(X)
-
-            for ix,xval in enumerate(yp):
-                for ixp, xpval in enumerate(Ydl):
-                    XXP[ix,ixp] = IYint(xval,xpval,0)
-
-
-            # XXP = IYint(X, XP, 0)
-            print("Integral of XXP", XXP.sum() * (yp[1] - yp[0]) * (Ydl[1] - Ydl[0]))
-
-            print("XXP shape", XXP.shape)
-
-            fig = plt.figure()
-
-            # cmap = plt.cm.Greys
-            plt.imshow(XXP.T, origin='lower', extent=[yp[0], yp[-1], Ydl[0], Ydl[-1]], cmap=None, aspect='auto')
-            plt.colorbar()
-            ax = fig.gca()
-            ax.set_xlabel("X")
-            ax.set_ylabel("Y")
-
-            plt.title("TITLE")
-            plt.show()
-
-            plt.plot(yp,XXP.sum(axis=1))
-            plt.title("INT vs yp")
-            plt.show()
-            plt.plot(Ydl, XXP.sum(axis=0))
-            plt.title("INT vs dl")
-            plt.show()
-
     elif Iy(0,0,0) == Iy(0,100,0):
         # If we arrive here, this means Ix depended of dl, so we do exactly the same thing as in the previous paragraph,
         # but with Iy
@@ -431,10 +466,15 @@ def beamGeoSize(IXXP,IYYP,ISigma, do_plot=True):  # the two next functions are s
         XEval = doubleIntegralDenullification(IXint, XEval, IotaXp, IotaXdl)
         YEval = simpleIntegralDenullification(Iy, YEval, IotaYp)
         # integrations
-        IxIntegrated_0 = si.nquad(IXint, [[-IotaXp, IotaXp], [-IotaXdl, IotaXdl]], args=(0,))[0]
-        IxIntegrated_E2 = si.nquad(IXint, [[-IotaXp, IotaXp], [-IotaXdl, IotaXdl]], args=(XEval,))[0]
         IyIntegrated_0 = si.quad(Iy, -IotaYp, IotaYp, args=(0, 0))[0]
         IyIntegrated_E2 = si.quad(Iy, -IotaYp, IotaYp, args=(0, YEval))[0]
+
+        IotaXpBetter = calculateBetterLimits(IXint, XEval, SigmaXPSource, SigmaSLambda, 10 ** -5)[0]
+        IotaXdlBetter = calculateBetterLimits(IXint, XEval, SigmaXPSource, SigmaSLambda, 10 ** -5)[1]
+        print('IotaXdlBetter is :', IotaXdlBetter, 'and IotaXpBetter is :', IotaXpBetter)
+
+        IxIntegrated_0 = si.nquad(IXint, [[-IotaXpBetter, IotaXpBetter], [-IotaXdlBetter, IotaXdlBetter]], args=(0,))[0]
+        IxIntegrated_E2 = si.nquad(IXint, [[-IotaXpBetter, IotaXpBetter], [-IotaXdlBetter, IotaXdlBetter]], args=(XEval,))[0]
         print('Value of the integrals : ',IyIntegrated_0, IyIntegrated_E2, IxIntegrated_0, IxIntegrated_E2)
         #simple calculation part
         ValueAX = IxIntegrated_0 * IyIntegrated_0
@@ -445,106 +485,45 @@ def beamGeoSize(IXXP,IYYP,ISigma, do_plot=True):  # the two next functions are s
         SigmaX = sigmaCalc(XEval, ValueExponentX, ValueAX)
         SigmaY = sigmaCalc(YEval, ValueExponentY, ValueAY)
 
-        # if do_plot == True:
-        #     xp = np.linspace(-IotaXp, IotaXp, 100)
-        #     Xdl = np.linspace(-IotaXdl, IotaXdl, 100)
-        #     X = np.outer(xp, np.ones_like(Xdl))
-        #     XP = np.outer(np.ones_like(xp), Xdl)
-        #
-        #     XXP = IXint(X, 0, XP)
-        #     print("Integral of XXP", XXP.sum() * (x[1] - x[0]) * (xp[1] - xp[0]))
-        #
-        #     print("XXP shape", XXP.shape)
-        #
-        #     fig = plt.figure()
-        #
-        #     # cmap = plt.cm.Greys
-        #     plt.imshow(Z.T, origin='lower', extent=[x[0], x[-1], y[0], y[-1]], cmap=None, aspect='auto')
-        #     plt.colorbar()
-        #     ax = fig.gca()
-        #     ax.set_xlabel("X")
-        #     ax.set_ylabel("Y")
-        #     plt.title("TITLE")
-        #     plt.show()
     else:
         print("Computation time too long, DeltaLambda variation on both axis -> not possible")
         return 0
 
-    # if do_plot == True:
-    #
-    #     # x = np.linspace(-IotaX, IotaX,100)
-    #     # y = np.linspace(-IotaY, IotaY, 100)
-    #     xp = np.linspace(-IotaXp, IotaXp, 100)
-    #     yp = np.linspace(-IotaYp, IotaYp, 100)
-    #     Xdl = np.linspace(-IotaXdl, IotaXdl, 100)
-    #     Ydl = np.linspace(-IotaYdl, IotaYdl, 100)
-    #
-    #     X = np.outer(x, np.ones_like(xp))
-    #     XP = np.outer(np.ones_like(x), xp)
-    #
-    #     XXP = ix(X, 0, XP)
-    #     print("Integral of XXP", XXP.sum() * (x[1]-x[0]) * (xp[1] - xp[0]))
-    #
-    #     print("XXP shape", XXP.shape)
-    #
-    #     fig = plt.figure()
-    #
-    #     # cmap = plt.cm.Greys
-    #     plt.imshow(Z.T, origin='lower', extent=[x[0], x[-1], y[0], y[-1]], cmap=None, aspect='auto')
-    #     plt.colorbar()
-    #     ax = fig.gca()
-    #     ax.set_xlabel("X")
-    #     ax.set_ylabel("Y")
-    #
-    #     plt.title("TITLE")
-    #     plt.show()
-
-
     return [SigmaX, SigmaY]
 
-def beamAngularSize(IXXP, IYYP, ISigma):
+def beamAngularSize(IXXP, IYYP, ISigma, SigmaXSource, SigmaYSource, SigmaSLambda):
     #creating the functions to integrate
     Ixp = lambda x, dl, xp : IXXP(x, xp, dl)
     Iyp = lambda y, dl, yp : IYYP(y, yp, dl)
-
+    [IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl] = calculateLimits(IXXP, IYYP, ISigma)
     #dl dependancy check on Ixp
     if Ixp(0, 0, 0) == Ixp(0, 100, 0):
         print("Lambda is affected to y")
         IYpint = lambda y, dl, yp : Iyp(y, dl, yp) * ISigma(dl)
-        IotaYdl = 10**-8
-        while IYpint(0, IotaYdl, 0) > 10**-15 * IYpint(0,0,0):
-            IotaYdl = IotaYdl * 2
-        IotaYdl = IotaYdl * 10
-        print('Integration limits are :', [IotaX,IotaY, IotaYdl])
         #Integrations
         XpEval = 10**-6
         YpEval = 10**-6
+        XpEval = simpleIntegralDenullification(Ixp, XpEval, IotaX)
+        YpEval = doubleIntegralDenullification(IYpint, YpEval, IotaY, IotaYdl)
         IxpIntegrated_0 = si.quad(Ixp, -IotaX, IotaX, args=(0, 0))[0]
         IxpIntegrated_E6 = si.quad(Ixp, -IotaX, IotaX, args=(0, XpEval))[0]
-        IypIntegrated_0 = si.nquad(IYpint, [[-IotaY, IotaY], [-IotaYdl, IotaYdl]], args=(0,))[0]
-        IypIntegrated_E6 = si.nquad(IYpint, [[-IotaY, IotaY], [-IotaYdl, IotaYdl]], args=(YpEval,))[0]
-        # integral denullification section
-        if IxpIntegrated_E6 == 0.0:
-            while IxpIntegrated_E6 == 0.0:
-                XpEval = XpEval / 2
-                IxpIntegrated_E6 = si.quad(Ixp, -IotaX, IotaX, args=(0, XpEval))[0]
-            XpEval = XpEval / 4
-            IxpIntegrated_E6 = si.quad(Ixp, -IotaX, IotaX, args=(0, XpEval))[0]
-        if IypIntegrated_E6 == 0:
-            while IypIntegrated_E6 == 0:
-                YpEval = YpEval / 2
-                IypIntegrated_E6 = si.nquad(IYpint, [[-IotaY, IotaY], [-IotaYdl, IotaYdl]], args=(YpEval,))[0]
-            YpEval = YpEval / 4
-            IypIntegrated_E6 = si.nquad(IYpint, [[-IotaY, IotaY], [-IotaYdl, IotaYdl]], args=(YpEval,))[0]
+
+        IotaYBetter = calculateBetterLimits(IYpint, YpEval, SigmaYSource, SigmaSLambda, 10 ** -5)[0]
+        IotaYdlBetter = calculateBetterLimits(IYpint, YpEval, SigmaYSource, SigmaSLambda, 10 ** -5)[1]
+        print('IotaYdlBetter is :', IotaYdlBetter, 'and IotaYBetter is :', IotaYBetter)
+
+        IypIntegrated_0 = si.nquad(IYpint, [[-IotaYBetter, IotaYBetter], [-IotaYdlBetter, IotaYdlBetter]], args=(0,))[0]
+        IypIntegrated_E6 = si.nquad(IYpint, [[-IotaYBetter, IotaYBetter], [-IotaYdlBetter, IotaYdlBetter]], args=(YpEval,))[0]
         print('Value of the integrals : ', IxpIntegrated_0, IxpIntegrated_E6, IypIntegrated_0, IypIntegrated_E6)
+
         #Simple calculation part
         ValueAXp = IxpIntegrated_0 * IypIntegrated_0
         print(ValueAXp)
         ValueAYp = ValueAXp
         ValueExponentXp = IypIntegrated_0 * IxpIntegrated_E6
         ValueExponentYp = IxpIntegrated_0 * IypIntegrated_E6
-        SigmaXp = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentXp / ValueAXp) * XpEval**2 )
-        SigmaYp = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentYp / ValueAYp) * YpEval**2 )
+        SigmaXp = sigmaCalc(XpEval, ValueExponentXp, ValueAXp)
+        SigmaYp = sigmaCalc(YpEval, ValueExponentYp, ValueAYp)
         SigmaXpMilliRad = SigmaXp * 10**6
         SigmaYpMilliRad = SigmaYp * 10**6
         return [SigmaXpMilliRad, SigmaYpMilliRad]
@@ -552,31 +531,21 @@ def beamAngularSize(IXXP, IYYP, ISigma):
     elif Iyp(0,0,0) == Iyp(0,100,0):
         print("Lambda is affected to x")
         IXpint = lambda x, dl, xp: Ixp(x, dl, xp) * ISigma(dl)
-        IotaXdl = 10 ** -8
-        while IXpint(0, IotaXdl, 0) > 10 ** -15 * IXpint(0, 0, 0):
-            IotaXdl = IotaXdl * 2
-        IotaXdl = IotaXdl * 10
         print('Integration limits are :', [IotaX, IotaY, IotaXdl])
         # Integrations
         XpEval = 10**-6
         YpEval = 10**-6
+        XpEval = doubleIntegralDenullification(IXpint, XpEval, IotaX, IotaXdl)
+        YpEval = simpleIntegralDenullification(Iyp, YpEval, IotaY)
         IypIntegrated_0 = si.quad(Iyp, -IotaY, IotaY, args=(0, 0))[0]
         IypIntegrated_E6 = si.quad(Iyp, -IotaY, IotaY, args=(0, YpEval))[0]
-        IxpIntegrated_0 = si.nquad(IXpint, [[-IotaX, IotaX], [-IotaXdl, IotaXdl]], args=(0,))[0]
-        IxpIntegrated_E6 = si.nquad(IXpint, [[-IotaX, IotaX], [-IotaXdl, IotaXdl]], args=(XpEval,))[0]
-        # integral denullification section
-        if IxpIntegrated_E6 == 0.0:
-            while IxpIntegrated_E6 == 0.0:
-                XpEval = XpEval / 2
-                IxpIntegrated_E6 = si.nquad(IXpint, [[-IotaX, IotaX], [-IotaXdl, IotaXdl]], args=(XpEval,))[0]
-            XpEval = XpEval / 4
-            IxpIntegrated_E6 = si.quad(Ixp, -IotaX, IotaX, args=(0, XpEval))[0]
-        if IypIntegrated_E6 == 0:
-            while IypIntegrated_E6 == 0:
-                YpEval = YpEval / 2
-                IypIntegrated_E6 = si.quad(Iyp, -IotaY, IotaY, args=(0, YpEval))[0]
-            YpEval = YpEval / 4
-            IypIntegrated_E6 = si.quad(Iyp, -IotaY, IotaY, args=(0, YpEval))[0]
+
+        IotaXBetter = calculateBetterLimits(IXpint, XpEval, SigmaXSource, SigmaSLambda, 10 ** -5)[0]
+        IotaXdlBetter = calculateBetterLimits(IXpint, XpEval, SigmaXSource, SigmaSLambda, 10 ** -5)[1]
+        print('IotaXdlBetter is :', IotaXdlBetter, 'and IotaXBetter is :', IotaXBetter)
+
+        IxpIntegrated_0 = si.nquad(IXpint, [[-IotaXBetter, IotaXBetter], [-IotaXdlBetter, IotaXdlBetter]], args=(0,))[0]
+        IxpIntegrated_E6 = si.nquad(IXpint, [[-IotaXBetter, IotaXBetter], [-IotaXdlBetter, IotaXdlBetter]], args=(XpEval,))[0]
         print('Value of the integrals : ',IxpIntegrated_0, IxpIntegrated_E6, IypIntegrated_0, IypIntegrated_E6)
         # Simple calculation part
         ValueAXp = IxpIntegrated_0 * IypIntegrated_0
@@ -584,8 +553,8 @@ def beamAngularSize(IXXP, IYYP, ISigma):
         ValueAYp = ValueAXp
         ValueExponentXp = IypIntegrated_0 * IxpIntegrated_E6
         ValueExponentYp = IxpIntegrated_0 * IypIntegrated_E6
-        SigmaXp = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentXp / ValueAXp) * XpEval**2 )
-        SigmaYp = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentYp / ValueAYp) * YpEval**2 )
+        SigmaXp = sigmaCalc(XpEval, ValueExponentXp, ValueAXp)
+        SigmaYp = sigmaCalc(YpEval, ValueExponentYp, ValueAYp)
         SigmaXpMilliRad = SigmaXp * 10**6
         SigmaYpMilliRad = SigmaYp * 10**6
         return [SigmaXpMilliRad, SigmaYpMilliRad]
@@ -593,123 +562,67 @@ def beamAngularSize(IXXP, IYYP, ISigma):
         print("Computation time too long, DeltaLambda variation on both axis -> not possible")
         return 0
 
-def sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, do_plot=True):
+def sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, SigmaXPSource, SigmaYPSource, SigmaXSource, SigmaYSource, SigmaSLambda, CoefAtten, CoefMonoX, CoefMonoY):
     #creating the functions to integrate
     Ix = lambda x, xp, dl: IXXP(x, xp, dl)
     Iy = lambda y, yp, dl: IYYP(y, yp, dl)
+    [IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl] = calculateLimits(IXXP, IYYP, ISigma)
+
     if Ix(0, 0, 0) == Ix(0, 0, 100):       #first dependancy check
         print("Lambda is affected to y")
         # last integration boundary needed and function creation
         IYint = lambda y, yp, dl: Iy(y, yp, dl) * ISigma(dl)
-        IotaYdl = 10 ** -8
-        while IYint(0, 0, IotaYdl) > 10 ** -15 * IYint(0, 0, 0):
-            IotaYdl = IotaYdl * 2
-        IotaYdl = IotaYdl * 10
-        print('Integration limits for x, y, xp, yp and dl are :', [IotaX, IotaY, IotaXp, IotaYp, IotaYdl])
         #Integrations
         DlEval = 10**-3
+        DlEval = doubleIntegralDenullification(IYint, DlEval, IotaY, IotaYp)
+        print('Lambda will be evaluated at :', DlEval)
+
         IxIntegrated = si.nquad(Ix, [[-IotaX, IotaX], [-IotaXp, IotaXp]], args=(0,))[0]
 
-        Epsilon = 10 ** -5
-        IotaYBetter = SigmaYSource
-        IotaYpBetter = SigmaYPSource
-        while si.quad(IYint, -IotaYBetter, IotaYBetter, args=(IotaYpBetter, DlEval))[0] / IYint(0, 0, 0) > Epsilon:
-            IotaYpBetter = IotaYpBetter * 2
-        IYintPerm = lambda dl, yp, y : IYint(yp, dl, y)
-        while si.quad(IYintPerm, -IotaYpBetter, IotaYpBetter, args=(IotaYBetter, DlEval))[0] > Epsilon :
-            IotaYBetter = IotaYBetter * 2
+        IotaYBetter = calculateBetterLimits(IYint, DlEval, SigmaYSource, SigmaYPSource, 10 ** -5)[0]
+        IotaYpBetter = calculateBetterLimits(IYint, DlEval, SigmaYSource, SigmaYPSource, 10 ** -5)[1]
         print('IotaYBetter is :', IotaYBetter, 'and IotaYpBetter is :', IotaYpBetter)
 
         IyIntegrated_0 = si.nquad(IYint, [[-IotaYBetter, IotaYBetter], [-IotaYpBetter, IotaYpBetter]], args=(0,))[0]
         IyIntegrated_E3 = si.nquad(IYint, [[-IotaYBetter, IotaYBetter], [-IotaYpBetter,IotaYpBetter]], args=(DlEval,))[0]
 
-        # integral denullification section
-        if IyIntegrated_E3 == 0.0:
-            while IyIntegrated_E3 == 0.0:
-                DlEval = DlEval / 2
-                IyIntegrated_E3 = si.nquad(IYint, [[-IotaY, IotaY], [-IotaYp, IotaYp]], args=(DlEval,))[0]
-            DlEval = DlEval / 4
-            IyIntegrated_E3 = si.nquad(IYint, [[-IotaY, IotaY], [-IotaYp, IotaYp]], args=(DlEval,))[0]
-        print('Lambda will be evaluated at :', DlEval)
         print('IxIntegrated is :', IxIntegrated, 'Other values :', IyIntegrated_0,IyIntegrated_E3 )
         #simple calculation part
         ValueAL = IxIntegrated * IyIntegrated_0
         print(" ValueAL gives :", ValueAL)
         ValueExponentL = IxIntegrated * IyIntegrated_E3
         print(" ValueExponentL gives :", ValueExponentL)
-        Sigma = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentL / ValueAL) * DlEval**2)
+        Sigma = sigmaCalc(DlEval, ValueExponentL, ValueAL)
         MaxFluxL = ValueAL
         # calculation of the flux
-        FluxPhi = si.nquad(IYint, [[-IotaYBetter, IotaYBetter], [-IotaYpBetter, IotaYpBetter], [-IotaYdl/2, IotaYdl/2]])
+        [IotaYBest, IotaYpBest, IotaYdlBest] = calculateUltimatelyBetterLimitsLikeSuperAwesomeLimitsAndWayBetterthanCalculateBetterLimits(IYint, SigmaYSource, SigmaYPSource, SigmaSLambda, 10**-5)
+        FluxPhi = si.nquad(IYint, [[-IotaYBest, IotaYBest], [-IotaYpBest, IotaYpBest], [-IotaYdlBest, IotaYdlBest]])
         print(FluxPhi)
         FluxPhi = IxIntegrated * FluxPhi[0]
         FluxPhi = CoefAtten * CoefMonoX * CoefMonoY * FluxPhi
 
-        if do_plot == True:
-            y = np.linspace(-IotaYBetter, IotaYBetter, 100)
-            yp = np.linspace(-IotaYpBetter, IotaYpBetter, 100)
-
-            Y = np.outer(y, np.ones_like(yp))
-            YP = np.outer(np.ones_like(y), yp)
-
-            YYP = np.zeros_like(Y)
-
-            for ix,xval in enumerate(y):
-                for ixp, xpval in enumerate(yp):
-                    YYP[ix,ixp] = IYint(xval,xpval,0)
-
-
-            # XXP = IYint(X, XP, 0)
-            print("Integral of YYP", YYP.sum() * (y[1] - y[0]) * (yp[1] - yp[0]))
-
-            print("YYP shape", YYP.shape)
-
-            fig = plt.figure()
-
-            # cmap = plt.cm.Greys
-            plt.imshow(YYP.T, origin='lower', extent=[y[0], y[-1], yp[0], yp[-1]], cmap=None, aspect='auto')
-            plt.colorbar()
-            ax = fig.gca()
-            ax.set_xlabel("X")
-            ax.set_ylabel("Y")
-
-            plt.title("TITLE")
-            plt.show()
-
-            plt.plot(y,YYP.sum(axis=1))
-            plt.title("INT vs yp")
-            plt.show()
-            plt.plot(yp, YYP.sum(axis=0))
-            plt.title("INT vs dl")
-            plt.show()
-
     elif Iy(0, 0, 0) == Iy(0, 0, 100):
         IXint = lambda x, xp, dl: Ix(x, xp, dl) * ISigma(dl)
-        IotaXdl = 10 ** -7
-        while IXint(0, 0, IotaXdl) > 10 ** -15 * IXint(0, 0, 0):
-            IotaXdl = IotaXdl * 2
-        IotaXdl = IotaXdl * 10
-        print('Integration limits are :', [IotaX, IotaY, IotaXp, IotaYp, IotaXdl])
         # Integrations
         DlEval = 10 ** -3
-        IyIntegrated = si.nquad(Iy, [[-IotaY, IotaY], [-IotaYp, IotaYp]], args=(0,))[0]
-        IxIntegrated_0 = si.nquad(IXint, [[-IotaX, IotaX], [-IotaXp, IotaXp]], args=(0,))[0]
-        IxIntegrated_E3 = si.nquad(IXint, [[-IotaX, IotaX], [-IotaXp, IotaXp]], args=(DlEval,))[0]
-        # integral denullification section
-        if IxIntegrated_E3 == 0.0:
-            while IxIntegrated_E3 == 0.0:
-                DlEval = DlEval / 2
-                IxIntegrated_E3 = si.nquad(IXint, [[-IotaX, IotaX], [-IotaXp, IotaXp]], args=(DlEval,))[0]
-            DlEval = DlEval / 4
-            IxIntegrated_E3 = si.nquad(IXint, [[-IotaX, IotaX], [-IotaXp, IotaXp]], args=(DlEval,))[0]
+        DlEval = doubleIntegralDenullification(IXint, DlEval, IotaX, IotaXp)
         print('Lambda will be evaluated at :', DlEval)
+        IyIntegrated = si.nquad(Iy, [[-IotaY, IotaY], [-IotaYp, IotaYp]], args=(0,))[0]
+
+        IotaXBetter = calculateBetterLimits(IXint, DlEval, SigmaXSource, SigmaXPSource, 10 ** -5)[0]
+        IotaXpBetter = calculateBetterLimits(IXint, DlEval, SigmaXSource, SigmaXPSource, 10 ** -5)[1]
+        print('IotaXBetter is :', IotaXBetter, 'and IotaXpBetter is :', IotaXpBetter)
+
+        IxIntegrated_0 = si.nquad(IXint, [[-IotaXBetter, IotaXBetter], [-IotaXpBetter, IotaXpBetter]], args=(0,))[0]
+        IxIntegrated_E3 = si.nquad(IXint, [[-IotaXBetter, IotaXBetter], [-IotaXpBetter, IotaXpBetter]], args=(DlEval,))[0]
         print('IxIntegrated is :', IxIntegrated_0)
+
         # simple calculation part
         ValueAL = IxIntegrated_0 * IyIntegrated
         print(" ValueAL gives :", ValueAL)
         ValueExponentL = IyIntegrated * IxIntegrated_E3
         print(" ValueExponentL gives :", ValueExponentL)
-        Sigma = 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) / -log(ValueExponentL / ValueAL) * DlEval**2 )
+        Sigma = sigmaCalc(DlEval, ValueExponentL, ValueAL)
         MaxFluxL = ValueAL
         # calculation of the flux
         FluxPhi = si.nquad(IXint, [[-IotaX/2, IotaX/2], [-IotaXp/2, IotaXp/2], [-IotaXdl/2, IotaXdl/2]])

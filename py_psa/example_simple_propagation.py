@@ -20,12 +20,25 @@ ListObject = []
 
 print('Integral', (2*pi)**2.5 * SigmaXSource * SigmaYSource * SigmaYPSource * SigmaXPSource * SigmaSLambda * SourceI)
 
-IXXP = SourceFinal(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[0]
-IYYP = SourceFinal(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[1]
+IXXP = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[0]
+IYYP = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[1]
+ISigma = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[2]
 
-SigmaXY = beamGeoSize(IXXP,IYYP,ISigma)
-SigmaXPYP = beamAngularSize(IXXP,IYYP,ISigma)
-SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP,IYYP,ISigma, CoefAtten, CoefMonoX)
+def IYint(y, yp, dl):
+    return IYYP(y, yp, dl) * ISigma(dl)
+
+print(calculateLimits(IXXP, IYYP, ISigma))
+plotXXP(IXXP, 2.68435456, 0.00016384)
+#[2.68435456, 0.00016384, 0.16777216, 1.024e-05, 8.192e-05, 0.01048576]
+plotYYP(IYYP, 0.01, 0.0001)
+# plotAnything(IYint, 0.04, 0.032, 0.032, 0, 12)
+# plotAnything(IYint, 0.04, 0.032, 0.032, 0, 23)
+# plotAnything(IYint, 0.04, 0.032, 0.032, 0, 13)
+
+
+SigmaXY = beamGeoSize(IXXP,IYYP,ISigma, SigmaXPSource, SigmaYPSource, SigmaSLambda)
+SigmaXPYP = beamAngularSize(IXXP, IYYP, ISigma, SigmaXSource, SigmaYSource, SigmaSLambda)
+SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, SigmaXPSource, SigmaYPSource, SigmaXSource, SigmaYSource, SigmaSLambda, CoefAtten, CoefMonoX, CoefMonoY)
 print('SigmaX: ',SigmaXY[0],' SigmaY: ',SigmaXY[1])
 print('SigmaXP:', SigmaXPYP[0], 'SigmaYP:', SigmaXPYP[1])
 print('SigmaLambda:', SigmaLambdaFlux[0], 'Flux:', SigmaLambdaFlux[2])
