@@ -34,7 +34,7 @@ Results for single vertical monochromator :
     Sigmay'= 6.67286659e+01
     SigmaLambda = 3.30851609e-04
 Results for single horizontal monochromator :
-    Flux = 5.95495 photon/s
+    Flux = 5.95495*10**10 photon/s
     FWHMx = 1.50718 mm
     FWHMy = 7.06450 mm
     FWHMx' = 49.622300 mrad

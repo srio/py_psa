@@ -1,4 +1,4 @@
-from psa_functions import *
+from psa_functions_numeric import *
 
 SourceI = 1e25
 SigmaXSource = 1e-1
@@ -32,13 +32,35 @@ ListObject = [Mono]
 MatTabX = [matrixFlight(z0), Mono[-2], matrixFlight(z1)]
 MatTabY = [matrixFlight(z0), Mono[-1], matrixFlight(z1)]
 
-SigmaXY = beamGeoSize(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)
-SigmaXPYP = beamAngularSize(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)
-SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX, MatTabY, ListObject, SourceI, CoefAtten, CoefMonoX, CoefMonoY, bMonoX, bMonoY)
+IXXP = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[0]
+IYYP = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[1]
+ISigma = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[2]
 
+# def IXint(x, xp, dl):
+#     return IXXP(x, xp, dl) * ISigma(dl)
+# def IYint(x, xp, dl):
+#     return IYYP(x, xp, dl) * ISigma(dl)
+
+[IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl] = calculateLimits(IXXP, IYYP, ISigma)
+print('The integrations boundaries are :', [IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl])
+
+# plotting section
+# plotXXP(IXXP, 0.1, 5*10**-6, 500)
+# plotYYP(IYYP, 10, 0.0005, 1000)
+# plotAnything(IXint, 0.1, 5*10**-6, 0, 0, 500)
+# plotAnything(IXint, 0, 10**-5, 10**-4, 0, 500)
+# plotAnything(IXint, 0.1, 0, 5*10**-5, 0, 500)
+
+
+SigmaXY = beamGeoSize(IXXP,IYYP,ISigma, SigmaXPSource, SigmaYPSource, SigmaSLambda)
+print('Beginning of angular integration')
+SigmaXPYP = beamAngularSize(IXXP, IYYP, ISigma, SigmaXSource, SigmaYSource, SigmaSLambda)
+print('Beginning of flux integration')
+SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, SigmaXPSource, SigmaYPSource, SigmaXSource, SigmaYSource, SigmaSLambda, CoefAtten, CoefMonoX, CoefMonoY)
 print('SigmaX: ',SigmaXY[0],' SigmaY: ',SigmaXY[1])
 print('SigmaXP:', SigmaXPYP[0], 'SigmaYP:', SigmaXPYP[1])
-print('SigmaLambda:', SigmaLambdaFlux[0], 'Flux:', SigmaLambdaFlux[2])
+print('SigmaLambda:', SigmaLambdaFlux[0], 'Flux:%g'%(SigmaLambdaFlux[2]))
+
 
 # # Results mathematica
 # Result monochromator vertical
@@ -50,4 +72,4 @@ sigmalambdaM = 1.15334503e-04
 nut.assert_array_almost_equal(SigmaXY, sigmaxyM, decimal=2)
 nut.assert_array_almost_equal(SigmaXPYP, sigmaxpypM, decimal=2)
 nut.assert_almost_equal(SigmaLambdaFlux[0], sigmalambdaM, decimal=2)
-# nut.assert_almost_equal(SigmaLambdaFlux[2], fluxM , decimal=3)
+nut.assert_almost_equal(SigmaLambdaFlux[2], fluxM , decimal=2)

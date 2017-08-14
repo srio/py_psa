@@ -13,57 +13,50 @@ CoefMonoX = 1
 CoefMonoY = 1
 CoefAtten = 1
 
-#distances
 z0 = 10000
 z1 = 20000
 
-# Mono data
-Alpha0  = 0
-Wd0     = 1.000000*10**-6
-WidthX0 = 2.000000*10**1
-WidthY0 = 2.000000*10**1
-RMono0  = 9.600000*10**-1
-Rint0   = 1.000000*10**-5
-thetaB0 = 1.140288*10**1 * pi /180
-bMono0  = np.sin(thetaB0+Alpha0)/np.sin(thetaB0-Alpha0)
-Mono = ['MonoPlaneVertical', thetaB0, Wd0, RMono0, Rint0, Alpha0, WidthX0, WidthY0,bMono0, matrixMonoPlane(bMono0, thetaB0), np.eye(3)]
+# # Mirror data
+Sigma0 = 0
+Delta0 = 1.000000*10**-7
+IncAng0 = 0
+Lambda0 = 1.127140*10**-7
+Fm0 = 8.333333*10**3
+S = 1
+Mirror = [np.eye(3), matrixMirror(IncAng0, Sigma0, Lambda0, Delta0, Fm0, S)]
 
-ListObject = [Mono]
-MatTabX = [matrixFlight(z0), Mono[-1], matrixFlight(z1)]
-MatTabY = [matrixFlight(z0), Mono[-2], matrixFlight(z1)]
+ListObject = [Mirror]
+MatTabX = [matrixFlight(z0), Mirror[-1], matrixFlight(z1)]
+MatTabY = [matrixFlight(z0), Mirror[-2], matrixFlight(z1)]
 
 IXXP = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[0]
 IYYP = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[1]
 ISigma = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[2]
+print(IXXP, IYYP)
 
-[IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl] = calculateLimits(IXXP, IYYP, ISigma)
-print('The integrations boundaries are :', [IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl])
-
-# plotting section
-# plotXXP(IXXP, 0.1, 5*10**-6, 500)
-# plotYYP(IYYP, 10, 0.0005, 1000)
-# plotAnything(IXint, 0.1, 5*10**-6, 0, 0, 500)
-# plotAnything(IXint, 0, 10**-5, 10**-4, 0, 500)
-# plotAnything(IXint, 0.1, 0, 5*10**-5, 0, 500)
-
-print('Beginning of geometric integration')
 SigmaXY = beamGeoSize(IXXP,IYYP,ISigma, SigmaXPSource, SigmaYPSource, SigmaSLambda)
-print('Beginning of angular integration')
 SigmaXPYP = beamAngularSize(IXXP, IYYP, ISigma, SigmaXSource, SigmaYSource, SigmaSLambda)
-print('Beginning of flux integration')
 SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, SigmaXPSource, SigmaYPSource, SigmaXSource, SigmaYSource, SigmaSLambda, CoefAtten, CoefMonoX, CoefMonoY)
 print('SigmaX:%g'%(SigmaXY[0]),' SigmaY:%g'%(SigmaXY[1]))
 print('SigmaXP:%g'%(SigmaXPYP[0]), 'SigmaYP:%g'%(SigmaXPYP[1]))
 print('SigmaLambda:%g'%(SigmaLambdaFlux[0]), 'Flux:%g'%(SigmaLambdaFlux[2]))
 
-# # Results mathematica
-# Result monochromator vertical
-fluxM = 5.17086 * 10 ** 10
-sigmaxyM = [9.05538410e-01, 2.00188970]
-sigmaxpypM = [2.99999994e+01, 6.67286659e+01]
-sigmalambdaM = 3.30851609e-04
+#plotting section
+# [Iota1, Iota2] = calculateBetterLimits(IXXP, 0, SigmaXSource, SigmaXPSource, 10**-15)
+# [Iota3, Iota4] = calculateBetterLimits(IYYP, 0, SigmaYSource, SigmaYPSource, 10**-15)
+# plotXXP(IXXP, 2, 0.0001, 1000)
+# plotYYP(IYYP, 11, 0.0005, 1000)
+# plotAnything(IYint, 0.16, 0.0005, 0, 0, 1000)
+# plotAnything(IYint, 0, 0.0005, 0.004, 0, 1000)
+# plotAnything(IYint, 2, 0, 0.004, 0, 1000)
+
+#data horizontal bent mirror mathematica
+fluxM = 2.96873 * 10 ** 12
+sigmaxyM = [2.28035259e-01, 3.00001693]
+sigmaxpypM = [1.34163968e+01, 9.99999981e+01]
+sigmalambdaM = 9.99999981e-04
 
 nut.assert_array_almost_equal(SigmaXY, sigmaxyM, decimal=2)
 nut.assert_array_almost_equal(SigmaXPYP, sigmaxpypM, decimal=2)
 nut.assert_almost_equal(SigmaLambdaFlux[0], sigmalambdaM, decimal=2)
-nut.assert_almost_equal(SigmaLambdaFlux[2], fluxM , decimal=2)
+nut.assert_almost_equal(SigmaLambdaFlux[2], fluxM , decimal=1)
