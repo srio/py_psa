@@ -15,9 +15,12 @@ CoefMonoY = 1
 CoefAtten = 1
 
 z0 = 20000
-MatTabX = [matrixFlight(z0)]
-MatTabY = [matrixFlight(z0)]
+
+# Object definition
 ListObject = []
+
+# MatTab construction
+[MatTabX, MatTabY] = buildMatTab(ListObject, ListDistance)
 
 print('Integral', (2*pi)**2.5 * SigmaXSource * SigmaYSource * SigmaYPSource * SigmaXPSource * SigmaSLambda * SourceI)
 
@@ -35,22 +38,20 @@ print("The symbolic expressions of IXXP is :", IXXPSymb,'and of IYYP :', IYYPSym
 # def IYint(x, xp, dl):
 #     return IYYP(x, xp, dl) * ISigma(dl)
 
-print(calculateLimits(IXXP, IYYP, ISigma))
-# print(IXXP(0,0,0), IYYP(0,0,0))
+# limit calculation
+[IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl] = calculateLimits(IXXP, IYYP, ISigma)
+print('The integrations boundaries are :', [IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl])
 
-[Iota1, Iota2] = calculateBetterLimits(IXXP, 0, SigmaXSource, SigmaXPSource, 10**-15)
-[Iota3, Iota4] = calculateBetterLimits(IYYP, 0, SigmaYSource, SigmaYPSource, 10**-15)
-print([Iota1, Iota2, Iota3, Iota4])
-# plotXXP(IXXP, Iota1, Iota2)
-# plotYYP(IYYP, Iota3, Iota4)
-
-
-SigmaXY = beamGeoSize(IXXP,IYYP,ISigma, SigmaXPSource, SigmaYPSource, SigmaSLambda)
-SigmaXPYP = beamAngularSize(IXXP, IYYP, ISigma, SigmaXSource, SigmaYSource, SigmaSLambda)
-SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, SigmaXPSource, SigmaYPSource, SigmaXSource, SigmaYSource, SigmaSLambda, CoefAtten, CoefMonoX, CoefMonoY)
+# Sigma calculations
+print('Beginning of geometric integration')
+SigmaXY = beamGeoSize(IXXP,IYYP,ISigma)
+print('Beginning of angular integration')
+SigmaXPYP = beamAngularSize(IXXP, IYYP, ISigma)
+print('Beginning of flux integration')
+# SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, CoefAtten, CoefMonoX, CoefMonoY)
 print('SigmaX:%g'%(SigmaXY[0]),' SigmaY:%g'%(SigmaXY[1]))
 print('SigmaXP:%g'%(SigmaXPYP[0]), 'SigmaYP:%g'%(SigmaXPYP[1]))
-print('SigmaLambda:%g'%(SigmaLambdaFlux[0]), 'Flux:%g'%(SigmaLambdaFlux[2]))
+# print('SigmaLambda:%g'%(SigmaLambdaFlux[0]), 'Flux:%g'%(SigmaLambdaFlux[2]))
 
 # Results mathematica simple propagation for z0 = 20000
 fluxM = 2.96873 * 10 ** 12

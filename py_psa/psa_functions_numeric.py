@@ -18,7 +18,7 @@ def matrixFlight(L):                                                       # For
 def matrixMonoPlane(b, ThetaB):                                         # For a perfect flat crystal monochromator
     return np.array([[b,0,0],[0,1/b,(1-1/b)*np.tan(ThetaB)],[0,0,1]])
 
-def matrixMonoBent(b, Fc, ThetaB):                                     # For a perfect curved crystal monochromator (meridionally and sagitally focusing)
+def matrixMonoBent(b, Fc, ThetaB):   # For a perfect curved crystal monochromator (meridionally and sagitally focusing)
     return np.array([[b,0,0],[1/Fc,1/b,(1-1/b)*np.tan(ThetaB)],[0,0,1]])
 
 def matrixMonoMosaic(ThetaB):                                             # For a mosaic monochromator
@@ -30,10 +30,10 @@ def matrixMirrorPlane(IncAng, Sigma, Lambda, Delta):                      # For 
 def matrixMirror(IncAng, Sigma, Lambda, Delta, Fm, S):                      # For the bent and toroidal mirrors
     return exp(-(4*pi*np.sin(IncAng)*Sigma/Lambda)**2)*np.array([[1,0,0],[(1+S*Fm*Delta)/Fm,1,0],[0,0,1]])
 
-def matrixCompLensPara(F):                                                 # For the compound refractive lenses with parabolic holes
+def matrixCompLensPara(F):                                    # For the compound refractive lenses with parabolic holes
     return np.array([[1,0,0],[1/F,1,0],[0,0,1]])
 
-def matrixCompLensCirc(Coef, F):                                           # For the compound refractive lenses with circular holes
+def matrixCompLensCirc(Coef, F):                               # For the compound refractive lenses with circular holes
     return np.array([[1,0,0],[Coef/F,1,0],[0,0,1]])
 
 def matrixMultilayer(Fmu):                                                  # For the multilayer
@@ -64,28 +64,30 @@ def acceptanceSlit(y, Aperture, calctype):                                      
 def acceptancePin(y, Diameter):                                                            #Pinhole acceptance
     return sqrt(8/pi) * exp ( -(y/Diameter)**2/2*16 )
 
-def acceptanceAngleMonoPlane(yp, DeltaLambda, ThetaB, Wd, RMono, RInt):                #Plane monochromator angle acceptance
+def acceptanceAngleMonoPlane(yp, DeltaLambda, ThetaB, Wd, RMono, RInt):           #Plane monochromator angle acceptance
     return RMono*RInt*sqrt(6/pi)/Wd * exp( -(yp-DeltaLambda*np.tan(ThetaB))**2 / (2*Wd**2/12))
 
-def acceptanceWaveMonoPlane(DeltaLambda, SigmaYp, ThetaB, Wd):                        #Plane monochromator wave acceptance
+def acceptanceWaveMonoPlane(DeltaLambda, SigmaYp, ThetaB, Wd):                     #Plane monochromator wave acceptance
     return sqrt(6/pi) * exp( - (DeltaLambda)**2 / (2*(SigmaYp**2+Wd**2/12)*cotan(ThetaB)**2) )
 
-def acceptanceAngleMonoMosaic(yp, DeltaLambda, ThetaB, eta, RInt):                       #Mosaic monochromator angular acceptance
+def acceptanceAngleMonoMosaic(yp, DeltaLambda, ThetaB, eta, RInt):             #Mosaic monochromator angular acceptance
     return RInt*sqrt(6/pi)/eta * exp(- (yp-DeltaLambda*np.tan(ThetaB))**2 / eta**2 /2 )
 
-def acceptanceWaveMonoMosaic(DeltaLambda, SigmaYp, ThetaB, eta):                        #Mosaic monochromator wave acceptance
+def acceptanceWaveMonoMosaic(DeltaLambda, SigmaYp, ThetaB, eta):                 #Mosaic monochromator wave acceptance
     return sqrt(6/pi) * exp( - (DeltaLambda)**2 / 2 /((SigmaYp**2+eta**2)*cotan(ThetaB)**2))
 
-def acceptanceAngleMonoBent(y, yp, DeltaLambda, Alpha, ThetaB, Wd, r, RMono, RInt):    #Curved monochromator angle acceptance
+def acceptanceAngleMonoBent(y, yp, DeltaLambda, Alpha, ThetaB, Wd, r, RMono, RInt):
+        #Curved monochromator angle acceptance
     return RMono*RInt*sqrt(6/pi)/Wd * exp( - (yp-y/r/np.sin(ThetaB+Alpha)-DeltaLambda*np.tan(ThetaB))**2/(2*Wd**2/12))
 
-def acceptanceWaveMonoBent(DeltaLambda, ThetaB, DistanceFromSource, Wd, SigmaSource):  #Curved monochromator wave acceptance
+def acceptanceWaveMonoBent(DeltaLambda, ThetaB, DistanceFromSource, Wd, SigmaSource):
+    #Curved monochromator wave acceptance
     return sqrt(6/pi) * exp( -(DeltaLambda)**2 / (2*cotan(ThetaB)**2*((SigmaSource/DistanceFromSource)**2+Wd**2/12))   )
 
-def acceptanceCompLensPara(x, Radius, Distance, Sigma):                                          #Compound refractive lense with parabolic holes acceptance
+def acceptanceCompLensPara(x, Radius, Distance, Sigma):    #Compound refractive lense with parabolic holes acceptance
     return exp( -(x**2+Radius*Distance)/2/Sigma**2)
 
-def acceptanceCompLensCirc(x, Radius, Distance, Sigma, FWHM):                                    #Compound refractive lense with circular holes acceptance
+def acceptanceCompLensCirc(x, Radius, Distance, Sigma, FWHM): #Compound refractive lense with circular holes acceptance
     return exp( -x**2/2/Sigma**2 -x**2*FWHM**2/8/Radius**2/Sigma**2 -x**2*FWHM**4/16/Sigma**2/Radius**4 -Radius*Distance/2/Sigma**2  )
 
 def acceptanceAngleMulti(y, yp, DeltaLambda, ThetaML, Rml, Rowland, Ws):                #Multilayer angle acceptance
@@ -96,6 +98,23 @@ def acceptanceWaveMulti(DeltaLambda, ThetaML, DistanceFromSource, Ws, SigmaSourc
 
 
 # Useful functions for the calculation part
+
+def buildMatTab(ListObject, ListDistance):
+    n = len(ListObject)
+    if ListDistance == []:
+        return 'Error, ListDistance is empty'
+    else :
+        MatTabX = [matrixFlight(ListDistance[0])]
+        MatTabY = [matrixFlight(ListDistance[0])]
+        if n == 0:
+            return [MatTabX, MatTabY]
+        else :
+            for k in range(n):
+                    MatTabX.append(ListObject[k][-1])
+                    MatTabX.append(matrixFlight(ListDistance[k+1]))
+                    MatTabY.append(ListObject[k][-2])
+                    MatTabY.append(matrixFlight(ListDistance[k+1]))
+            return [MatTabX, MatTabY]
 
 def propagateMatrixList(x, xp, y, yp, dl, SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX, MatTabY, ListObject, bMonoX, bMonoY):
     # initiating variables, copies of the arrays are created
@@ -129,21 +148,65 @@ def propagateMatrixList(x, xp, y, yp, dl, SigmaXSource, SigmaXPSource, SigmaYSou
                 MatTempX = np.dot(MX[i],MatTempX)
                 MatTempY = np.dot(MY[i], MatTempY)
             if ListObject[k][0] == 'Slit':
-                NewSourceX = NewSourceX * acceptanceSlit(MatTempX[0], ListObject[k][1], ListObject[k][4])
-                NewSourceY = NewSourceY * acceptanceSlit(MatTempY[0], ListObject[k][2], ListObject[k][4])
-            elif ListObject[k][0] == 'MonoPlaneVertical':
-                NewSourceY = NewSourceY * acceptanceAngleMonoPlane(MatTempY[1], MatTempY[2], ListObject[k][1], ListObject[k][2], ListObject[k][3], ListObject[k][4])
-                NewSourceY = NewSourceY * acceptanceWaveMonoPlane(MatTempY[2], bMonoY*SigmaYPSource, ListObject[k][1], ListObject[k][2])
+                NewSourceX = NewSourceX * acceptanceSlit(MatTempX[0], ListObject[k][1], ListObject[k][3])
+                NewSourceY = NewSourceY * acceptanceSlit(MatTempY[0], ListObject[k][2], ListObject[k][3])
+            elif ListObject[k][0] == 'Pinhole' :
+                NewSourceX = NewSourceX * acceptancePin(MatTempX[0], ListObject[k][1])
+                NewSourceY = NewSourceY * acceptancePin(MatTempX[0], ListObject[k][1])
             elif ListObject[k][0] == 'MonoPlaneHorizontal':
-                NewSourceX = NewSourceX * acceptanceAngleMonoPlane(MatTempX[1], MatTempX[2], ListObject[k][1], ListObject[k][2], ListObject[k][3], ListObject[k][4])
-                NewSourceX = NewSourceX * acceptanceWaveMonoPlane(MatTempX[2], bMonoX*SigmaXPSource, ListObject[k][1], ListObject[k][2])
+                NewSourceX = NewSourceX * acceptanceAngleMonoPlane(MatTempX[1], MatTempX[2], ListObject[k][1],
+                                                                   ListObject[k][2], ListObject[k][3], ListObject[k][4])
+                NewSourceX = NewSourceX * acceptanceWaveMonoPlane(MatTempX[2], bMonoX * SigmaXPSource, ListObject[k][1],
+                                                                  ListObject[k][2])
+            elif ListObject[k][0] == 'MonoPlaneVertical':
+                NewSourceY = NewSourceY * acceptanceAngleMonoPlane(MatTempY[1], MatTempY[2], ListObject[k][1],
+                                                                   ListObject[k][2], ListObject[k][3], ListObject[k][4])
+                NewSourceY = NewSourceY * acceptanceWaveMonoPlane(MatTempY[2], bMonoY * SigmaYPSource, ListObject[k][1],
+                                                                  ListObject[k][2])
             elif ListObject[k][0] == 'MultiHorizontal':
-                NewSourceX = NewSourceX * acceptanceAngleMulti(MatTempX[0], MatTempX[1], MatTempX[2], ListObject[k][1], ListObject[k][2], ListObject[k][3], ListObject[k][4])
-                NewSourceX = NewSourceX * acceptanceWaveMulti(MatTempX[2], ListObject[k][1], ListObject[k][5], ListObject[k][4], SigmaXSource)
-            elif ListObject[k][0] == 'MultiVertical' :
-                NewSourceY = NewSourceY * acceptanceAngleMulti(MatTempY[0], MatTempY[1], MatTempY[2], ListObject[k][1], ListObject[k][2], ListObject[k][3], ListObject[k][4])
-                NewSourceY = NewSourceY * acceptanceWaveMulti(MatTempY[2], ListObject[k][1], ListObject[k][5], ListObject[k][4], SigmaYSource)
-            k = k +1
+                NewSourceX = NewSourceX * acceptanceAngleMulti(MatTempX[0], MatTempX[1], MatTempX[2], ListObject[k][1],
+                                                               ListObject[k][2], ListObject[k][3], ListObject[k][4])
+                NewSourceX = NewSourceX * acceptanceWaveMulti(MatTempX[2], ListObject[k][1], ListObject[k][5],
+                                                              ListObject[k][4], SigmaXSource)
+            elif ListObject[k][0] == 'MultiVertical':
+                NewSourceY = NewSourceY * acceptanceAngleMulti(MatTempY[0], MatTempY[1], MatTempY[2], ListObject[k][1],
+                                                               ListObject[k][2], ListObject[k][3], ListObject[k][4])
+                NewSourceY = NewSourceY * acceptanceWaveMulti(MatTempY[2], ListObject[k][1], ListObject[k][5],
+                                                              ListObject[k][4], SigmaYSource)
+            elif ListObject[k][0] == 'MonoBentHorizontal':
+                NewSourceX = NewSourceX * acceptanceAngleMonoBent(MatTempX[0], MatTempX[1], MatTempX[2],
+                                                                  ListObject[k][1], ListObject[k][2], ListObject[k][3],
+                                                                  ListObject[k][4], ListObject[k][5], ListObject[k][6])
+                NewSourceX = NewSourceX * acceptanceWaveMonoBent(MatTempX[2], ListObject[k][2], ListObject[k][7],
+                                                                 ListObject[k][3], SigmaXSource)
+            elif ListObject[k][0] == 'MonoBentVertical':
+                NewSourceY = NewSourceY * acceptanceAngleMonoBent(MatTempY[0], MatTempY[1], MatTempY[2],
+                                                                  ListObject[k][1], ListObject[k][2], ListObject[k][3],
+                                                                  ListObject[k][4], ListObject[k][5], ListObject[k][6])
+                NewSourceY = NewSourceY * acceptanceWaveMonoBent(MatTempY[2], ListObject[k][2], ListObject[k][7],
+                                                                 ListObject[k][3], SigmaYSource)
+            elif ListObject[k][0] == 'MonoMosaicHorizontal':
+                NewSourceX = NewSourceX * acceptanceAngleMonoMosaic(MatTempX[1], MatTempX[2], ListObject[k][1],
+                                                                    ListObject[k][2], ListObject[k][3])
+                NewSourceX = NewSourceX * acceptanceWaveMonoMosaic(MatTempX[2], SigmaXPSource, ListObject[k][1],
+                                                                   ListObject[k][2])
+            elif ListObject[k][0] == 'MonoMosaicVertical':
+                NewSourceY = NewSourceY * acceptanceAngleMonoMosaic(MatTempY[1], MatTempY[2], ListObject[k][1],
+                                                                    ListObject[k][2], ListObject[k][3])
+                NewSourceY = NewSourceY * acceptanceWaveMonoMosaic(MatTempY[2], SigmaYPSource, ListObject[k][1],
+                                                                   ListObject[k][2])
+            elif ListObject[k][0] == 'LensParabolicHorizontal':
+                NewSourceX = NewSourceX * acceptanceCompLensPara(MatTempX[0], ListObject[k][1], ListObject[k][2],
+                                                                 ListObject[k][3])
+            elif ListObject[k][0] == 'LensParabolicVertical':
+                NewSourceY = NewSourceY * acceptanceCompLensPara(MatTempY[0], ListObject[k][1], ListObject[k][2],
+                                                                 ListObject[k][3])
+            elif ListObject[k][0] == 'LensParabolic2D':
+                NewSourceX = NewSourceX * acceptanceCompLensPara(MatTempX[0], ListObject[k][1], ListObject[k][2],
+                                                                 ListObject[k][3])
+                NewSourceY = NewSourceY * acceptanceCompLensPara(MatTempY[0], ListObject[k][1], ListObject[k][2],
+                                                                 ListObject[k][3])
+            k = k + 1
             del MX[0:2]
             del MY[0:2]
     return [NewSourceX, NewSourceY]
@@ -157,22 +220,22 @@ def sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, Sigma
 def calculateLimits(IXXP, IYYP, ISigma):
     # We need to minimize calculation time and maximize precision and avoid empty
     # sampling. So we determine the boundaries of our gaussians with a quick algorithm.
-    IotaX = 10 ** -8
+    IotaX = 10 ** -10
     while IXXP(IotaX, 0, 0) > 10 ** -15 * IXXP(0, 0, 0):
         IotaX = IotaX * 2
     IotaX = IotaX * 2
 
-    IotaXp = 10 ** -8
+    IotaXp = 10 ** -10
     while IXXP(0, IotaXp, 0) > 10 ** -15 * IXXP(0, 0, 0):
         IotaXp = IotaXp * 2
     IotaXp = IotaXp * 2
 
-    IotaY = 10 ** -8
+    IotaY = 10 ** -10
     while IYYP(IotaY, 0, 0) > 10 ** -15 * IYYP(0, 0, 0):
         IotaY = IotaY * 2
     IotaY = IotaY * 2
 
-    IotaYp = 10 ** -8
+    IotaYp = 10 ** -10
     while IYYP(0, IotaYp, 0) > 10 ** -15 * IYYP(0, 0, 0):
         IotaYp = IotaYp * 2
     IotaYp = IotaYp * 2
@@ -180,11 +243,11 @@ def calculateLimits(IXXP, IYYP, ISigma):
     IXint = lambda x, xp, dl : IXXP(x, xp, dl) * ISigma(dl)
     IYint = lambda y, yp, dl : IYYP(y, yp, dl) * ISigma(dl)
 
-    IotaYdl = 10 ** -8
+    IotaYdl = 10 ** -10
     while IYint(0, 0, IotaYdl) > 10 ** -15 * IYint(0, 0, 0):
         IotaYdl = IotaYdl * 2
 
-    IotaXdl = 10 ** -8
+    IotaXdl = 10 ** -10
     while IXint(0, IotaXdl, 0) > 10 ** -15 * IXint(0, 0, 0):
         IotaXdl = IotaXdl * 2
 
@@ -199,15 +262,39 @@ def comparisonSourceBoundaries(IXXP, IYYP, ISigma, SigmaXSource, SigmaXPSource, 
 def calculateBetterLimits(f, Eval, SigmaSource1, SigmaSource2, Epsilon):
     Iota1 = SigmaSource1
     Iota2 = SigmaSource2
+    k = 1
     fPerm = lambda x, y, z: f(y, x, z)
-    while si.quad(f, -Iota1, Iota1, args=(Iota2, Eval))[0] / f(0, 0, 0) > Epsilon:
-        Iota2 = Iota2 * 2
-        while si.quad(fPerm, -Iota2, Iota2, args=(Iota1, Eval))[0] / f(0, 0, 0) > Epsilon:
-            Iota1 = Iota1 * 2
-    while si.quad(fPerm, -Iota2, Iota2, args=(Iota1, Eval))[0] / f(0, 0, 0) > Epsilon:
-        Iota1 = Iota1 * 2
+    while k == 1:
+        k = 0
         while si.quad(f, -Iota1, Iota1, args=(Iota2, Eval))[0] / f(0, 0, 0) > Epsilon:
             Iota2 = Iota2 * 2
+            while si.quad(fPerm, -Iota2, Iota2, args=(Iota1, Eval))[0] / f(0, 0, 0) > Epsilon:
+                Iota1 = Iota1 * 2
+                k = 1
+        while si.quad(fPerm, -Iota2, Iota2, args=(Iota1, Eval))[0] / f(0, 0, 0) > Epsilon:
+            Iota1 = Iota1 * 2
+            while si.quad(f, -Iota1, Iota1, args=(Iota2, Eval))[0] / f(0, 0, 0) > Epsilon:
+                Iota2 = Iota2 * 2
+                k = 1
+    return Iota1, Iota2
+
+def calculateNonCenteredLimits(f, Eval, SigmaSource1, SigmaSource2, Epsilon):
+    Iota1 = 4*SigmaSource1
+    Iota2 = 4*SigmaSource2
+    k = 1
+    fPerm = lambda x, y, z: f(y, x, z)
+    while k == 1:
+        k = 0
+        while si.quad(f, -Iota1, Iota1, args=(Iota2, Eval))[0] / f(0, 0, Eval) > Epsilon or si.quad(f, -Iota1, Iota1, args=(-Iota2, Eval))[0] / f(0, 0, Eval) > Epsilon:
+            Iota2 = Iota2 * 2
+            while si.quad(fPerm, -Iota2, Iota2, args=(Iota1, Eval))[0] / f(0, 0, Eval) > Epsilon or si.quad(fPerm, -Iota2, Iota2, args=(-Iota1, Eval))[0] / f(0, 0, Eval) > Epsilon:
+                Iota1 = Iota1 * 2
+                k = 1
+        while si.quad(fPerm, -Iota2, Iota2, args=(Iota1, Eval))[0] / f(0, 0, Eval) > Epsilon or si.quad(fPerm, -Iota2, Iota2, args=(-Iota1, Eval))[0] / f(0, 0, Eval) > Epsilon:
+            Iota1 = Iota1 * 2
+            while si.quad(f, -Iota1, Iota1, args=(Iota2, Eval))[0] / f(0, 0, Eval) > Epsilon or si.quad(f, -Iota1, Iota1, args=(-Iota2, Eval))[0] / f(0, 0, Eval) > Epsilon:
+                Iota2 = Iota2 * 2
+                k = 1
     return Iota1, Iota2
 
 def calculateEvenBetterLimits(f, SigmaSource1, SigmaSource2, SigmaSource3, Epsilon):
@@ -446,7 +533,7 @@ def plotAnything(f, Iota1, Iota2, Iota3, Eval, NumPoints):
 
 # Where the magic happens...
 
-def beamGeoSize(IXXP,IYYP,ISigma, SigmaXPSource, SigmaYPSource, SigmaSLambda):  # the two next functions are similar to this model
+def beamGeoSize(IXXP,IYYP,ISigma):  # the two next functions are similar to this model
     # creating the functions to integrate, we need to redo this every time because the integration functions integrate
     # using the order in which the parameters are input, like it will integrate Ix in this order : xp, dl and then x
     Ix = lambda xp, dl, x : IXXP(x, xp, dl)
@@ -475,12 +562,15 @@ def beamGeoSize(IXXP,IYYP,ISigma, SigmaXPSource, SigmaYPSource, SigmaSLambda):  
         IxIntegrated_0 = si.quad(Ix, -IotaXp, IotaXp, args=(0, 0))[0]    #xp is integrated
         IxIntegrated_E2 = si.quad(Ix, -IotaXp, IotaXp, args=(0, XEval))[0]
 
-        IotaYpBetter = calculateBetterLimits(IYint, YEval, SigmaYPSource, SigmaSLambda, 10**-10)[0]
-        IotaYdlBetter = calculateBetterLimits(IYint, YEval, SigmaYPSource, SigmaSLambda, 10**-10)[1]
+        IotaYpBetter = calculateBetterLimits(IYint, 0, IotaYp, IotaYdl, 10**-10)[0]
+        IotaYdlBetter = calculateBetterLimits(IYint, 0, IotaYp, IotaYdl, 10**-10)[1]
         print('IotaYdlBetter is :', IotaYdlBetter, 'and IotaYpBetter is :', IotaYpBetter)
+        IotaOffsetYp = calculateNonCenteredLimits(IYint, YEval, IotaYp, IotaYdl, 10**-4)[0]
+        IotaOffsetYdl = calculateNonCenteredLimits(IYint, YEval, IotaYp, IotaYdl, 10**-4)[1]
+        print('IotaOffsetYdl is :', IotaOffsetYdl, 'and IotaOffsetYp is :', IotaOffsetYp)
 
         IyIntegrated_0 = si.nquad(IYint, [[-IotaYpBetter, IotaYpBetter], [-IotaYdlBetter, IotaYdlBetter]], args=(0,))[0]
-        IyIntegrated_E2 = si.nquad(IYint, [[-IotaYpBetter, IotaYpBetter],[-IotaYdlBetter, IotaYdlBetter]], args=(YEval,))[0]
+        IyIntegrated_E2 = si.nquad(IYint, [[-IotaOffsetYp, IotaOffsetYp],[-IotaOffsetYdl, IotaOffsetYdl]], args=(YEval,))[0]
 
         print('Value of the integrals : ', IxIntegrated_0, IxIntegrated_E2, IyIntegrated_0, IyIntegrated_E2)
         # we now have our integrals, we just need both Sigmas
@@ -503,16 +593,20 @@ def beamGeoSize(IXXP,IYYP,ISigma, SigmaXPSource, SigmaYPSource, SigmaSLambda):  
         # integral denullification section
         XEval = doubleIntegralDenullification(IXint, XEval, IotaXp, IotaXdl)
         YEval = simpleIntegralDenullification(Iy, YEval, IotaYp)
+        print('XEval and YEval are :', XEval, YEval)
         # integrations
         IyIntegrated_0 = si.quad(Iy, -IotaYp, IotaYp, args=(0, 0))[0]
         IyIntegrated_E2 = si.quad(Iy, -IotaYp, IotaYp, args=(0, YEval))[0]
 
-        IotaXpBetter = calculateBetterLimits(IXint, XEval, SigmaXPSource, SigmaSLambda, 10 ** -10)[0]
-        IotaXdlBetter = calculateBetterLimits(IXint, XEval, SigmaXPSource, SigmaSLambda, 10 ** -10)[1]
+        IotaXpBetter = calculateBetterLimits(IXint, 0, IotaXp, IotaXdl, 10 ** -10)[0]
+        IotaXdlBetter = calculateBetterLimits(IXint, 0, IotaXp, IotaXdl, 10 ** -10)[1]
         print('IotaXdlBetter is :', IotaXdlBetter, 'and IotaXpBetter is :', IotaXpBetter)
+        IotaOffsetXp = calculateNonCenteredLimits(IXint, XEval, IotaXp, IotaXdl, 10**-4)[0]
+        IotaOffsetXdl = calculateNonCenteredLimits(IXint, XEval, IotaXp, IotaXdl, 10**-4)[1]
+        print('IotaOffsetXdl is :', IotaOffsetXdl, 'and IotaOffsetXp is :', IotaOffsetXp)
 
         IxIntegrated_0 = si.nquad(IXint, [[-IotaXpBetter, IotaXpBetter], [-IotaXdlBetter, IotaXdlBetter]], args=(0,))[0]
-        IxIntegrated_E2 = si.nquad(IXint, [[-IotaXpBetter, IotaXpBetter], [-IotaXdlBetter, IotaXdlBetter]], args=(XEval,))[0]
+        IxIntegrated_E2 = si.nquad(IXint, [[-IotaOffsetXp, IotaOffsetXp], [-IotaOffsetXdl, IotaOffsetXdl]], args=(XEval,))[0]
         print('Value of the integrals : ',IyIntegrated_0, IyIntegrated_E2, IxIntegrated_0, IxIntegrated_E2)
         #simple calculation part
         ValueAX = IxIntegrated_0 * IyIntegrated_0
@@ -529,7 +623,7 @@ def beamGeoSize(IXXP,IYYP,ISigma, SigmaXPSource, SigmaYPSource, SigmaSLambda):  
 
     return [SigmaX, SigmaY]
 
-def beamAngularSize(IXXP, IYYP, ISigma, SigmaXSource, SigmaYSource, SigmaSLambda):
+def beamAngularSize(IXXP, IYYP, ISigma):
     #creating the functions to integrate
     Ixp = lambda x, dl, xp : IXXP(x, xp, dl)
     Iyp = lambda y, dl, yp : IYYP(y, yp, dl)
@@ -546,8 +640,8 @@ def beamAngularSize(IXXP, IYYP, ISigma, SigmaXSource, SigmaYSource, SigmaSLambda
         IxpIntegrated_0 = si.quad(Ixp, -IotaX, IotaX, args=(0, 0))[0]
         IxpIntegrated_E6 = si.quad(Ixp, -IotaX, IotaX, args=(0, XpEval))[0]
 
-        IotaYBetter = calculateBetterLimits(IYpint, YpEval, SigmaYSource, SigmaSLambda, 10 ** -10)[0]
-        IotaYdlBetter = calculateBetterLimits(IYpint, YpEval, SigmaYSource, SigmaSLambda, 10 ** -10)[1]
+        IotaYBetter = calculateBetterLimits(IYpint, YpEval, IotaY, IotaYdl, 10 ** -10)[0]
+        IotaYdlBetter = calculateBetterLimits(IYpint, YpEval, IotaY, IotaYdl, 10 ** -10)[1]
         print('IotaYdlBetter is :', IotaYdlBetter, 'and IotaYBetter is :', IotaYBetter)
 
         IypIntegrated_0 = si.nquad(IYpint, [[-IotaYBetter, IotaYBetter], [-IotaYdlBetter, IotaYdlBetter]], args=(0,))[0]
@@ -577,8 +671,8 @@ def beamAngularSize(IXXP, IYYP, ISigma, SigmaXSource, SigmaYSource, SigmaSLambda
         IypIntegrated_0 = si.quad(Iyp, -IotaY, IotaY, args=(0, 0))[0]
         IypIntegrated_E6 = si.quad(Iyp, -IotaY, IotaY, args=(0, YpEval))[0]
 
-        IotaXBetter = calculateBetterLimits(IXpint, XpEval, SigmaXSource, SigmaSLambda, 10 ** -10)[0]
-        IotaXdlBetter = calculateBetterLimits(IXpint, XpEval, SigmaXSource, SigmaSLambda, 10 ** -10)[1]
+        IotaXBetter = calculateBetterLimits(IXpint, XpEval, IotaX, IotaXdl, 10 ** -10)[0]
+        IotaXdlBetter = calculateBetterLimits(IXpint, XpEval, IotaX, IotaXdl, 10 ** -10)[1]
         print('IotaXdlBetter is :', IotaXdlBetter, 'and IotaXBetter is :', IotaXBetter)
 
         IxpIntegrated_0 = si.nquad(IXpint, [[-IotaXBetter, IotaXBetter], [-IotaXdlBetter, IotaXdlBetter]], args=(0,))[0]
@@ -599,7 +693,7 @@ def beamAngularSize(IXXP, IYYP, ISigma, SigmaXSource, SigmaYSource, SigmaSLambda
         print("Computation time too long, DeltaLambda variation on both axis -> not possible")
         return 0
 
-def sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, SigmaXPSource, SigmaYPSource, SigmaXSource, SigmaYSource, SigmaSLambda, CoefAtten, CoefMonoX, CoefMonoY, Method=1):
+def sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, CoefAtten, CoefMonoX, CoefMonoY, Method=1):
     #creating the functions to integrate
     Ix = lambda x, xp, dl: IXXP(x, xp, dl)
     Iy = lambda y, yp, dl: IYYP(y, yp, dl)
@@ -616,8 +710,8 @@ def sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, SigmaXPSource, SigmaYPSource, Si
 
         IxIntegrated = si.nquad(Ix, [[-IotaX, IotaX], [-IotaXp, IotaXp]], args=(0,))[0]
 
-        IotaYBetter = calculateBetterLimits(IYint, DlEval, SigmaYSource, SigmaYPSource, 10 ** -10)[0]
-        IotaYpBetter = calculateBetterLimits(IYint, DlEval, SigmaYSource, SigmaYPSource, 10 ** -10)[1]
+        IotaYBetter = calculateBetterLimits(IYint, DlEval, IotaY, IotaYp, 10 ** -10)[0]
+        IotaYpBetter = calculateBetterLimits(IYint, DlEval, IotaY, IotaYp, 10 ** -10)[1]
         print('IotaYBetter is :', IotaYBetter, 'and IotaYpBetter is :', IotaYpBetter)
 
         options = {'limit': 200}
@@ -634,7 +728,7 @@ def sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, SigmaXPSource, SigmaYPSource, Si
         Sigma = sigmaCalc(DlEval, ValueExponentL, ValueAL)
         MaxFluxL = ValueAL
         # calculation of the flux
-        [IotaYBest, IotaYpBest, IotaYdlBest] = calculateEvenBetterLimits(IYint, SigmaYSource, SigmaYPSource, SigmaSLambda, 10**-7)
+        [IotaYBest, IotaYpBest, IotaYdlBest] = calculateEvenBetterLimits(IYint, IotaY, IotaYp, IotaYdl, 10**-7)
         if Method == 0: # this method is less useful, if integration boundaries are too high, python will not be able to integrate, which is why it should not be used
             options = {'limit': 100}
             FluxPhi = si.nquad(IYint, [[-IotaYBest, IotaYBest], [-IotaYpBest, IotaYpBest], [-IotaYdlBest, IotaYdlBest]], opts=[options, options, options])
@@ -652,8 +746,8 @@ def sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, SigmaXPSource, SigmaYPSource, Si
         print('Lambda will be evaluated at :', DlEval)
         IyIntegrated = si.nquad(Iy, [[-IotaY, IotaY], [-IotaYp, IotaYp]], args=(0,))[0]
 
-        IotaXBetter = calculateBetterLimits(IXint, DlEval, SigmaXSource, SigmaXPSource, 10 ** -10)[0]
-        IotaXpBetter = calculateBetterLimits(IXint, DlEval, SigmaXSource, SigmaXPSource, 10 ** -10)[1]
+        IotaXBetter = calculateBetterLimits(IXint, DlEval, IotaX, IotaXp, 10 ** -10)[0]
+        IotaXpBetter = calculateBetterLimits(IXint, DlEval, IotaX, IotaXp, 10 ** -10)[1]
         print('IotaXBetter is :', IotaXBetter, 'and IotaXpBetter is :', IotaXpBetter)
 
         IxIntegrated_0 = si.nquad(IXint, [[-IotaXBetter, IotaXBetter], [-IotaXpBetter, IotaXpBetter]], args=(0,))[0]
@@ -668,7 +762,7 @@ def sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, SigmaXPSource, SigmaYPSource, Si
         Sigma = sigmaCalc(DlEval, ValueExponentL, ValueAL)
         MaxFluxL = ValueAL
         # calculation of the flux
-        [IotaXBest, IotaXpBest, IotaXdlBest] = calculateEvenBetterLimits(IXint, SigmaXSource, SigmaXPSource, SigmaSLambda, 10**-7)
+        [IotaXBest, IotaXpBest, IotaXdlBest] = calculateEvenBetterLimits(IXint, IotaX, IotaXp, IotaXdl, 10**-7)
         if Method == 0:
             options = {'limit': 100}
             FluxPhi = si.nquad(IXint, [[-IotaXBest, IotaXBest], [-IotaXpBest, IotaXpBest], [-IotaXdlBest, IotaXdlBest]], opts=[options, options, options])

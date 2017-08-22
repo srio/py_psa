@@ -111,7 +111,6 @@ Results :
     Sigmax'= 13.438788222753518
     Sigmay'= 100.00000000018085
     SigmaLambda = 0.00100
-
 Bent vertical mirror :
     Flux =  2.96873*10**12 photon/s
     Sigmax = 9.05538410e-01
@@ -126,6 +125,102 @@ Results :
     Sigmax'= 30.000000000026592
     Sigmay'= 20.135853447897073
     SigmaLambda = 0.00100000000000000
+Toroidal mirror
+Settings
+z0 = 10000
+z1 = 20000
+pX = 20000
+qX = 20000
+pY = 16000
+qY = 16000
+RMirror = 1
+SigmaX = 4e-7
+SigmaY = 4e-7
+DeltaX = 1
+DeltaY = 10
+IncAng = 0.1
+Results
+    Flux = 3.04155*10**12 photon/s
+    Sigmax = 3.18121549e-01
+    sigmay = 3.03529776e-01
+    Sigmax'= 1.00613208e+01
+    Sigmay'= 3.51776350e+01
+    SigmaLambda = 9.99999981e-04
+
+
+Monochromator bent :
+z0 = 10000
+z1 = 20000
+Alpha0 = 0
+Wd0 = 1.000000*10**-6
+RowlandRadius0 = 5.000000*10**4
+WidthX0 = 1.000000*10**1
+WidthY0 = 1.000000*10**1
+RMono0  = 9.000000*10**-1
+Rint0   = 1.300000*10**-5
+thetaB0 = 1.035423*10**1*pi/180
+Fc0     = 4.493334*10**3
+DfS0    = 1.000000*10**4
+Results vertical :
+    Flux = 1.07708*10**8 photon/s
+    Sigmax = 9.05538410e-01
+    sigmay = 4.89927034e-02
+    Sigmax'= 2.99999994e+01
+    Sigmay'= 2.51906723e+00
+    SigmaLambda = 5.69657118e-06
+Results horizontal :
+    Flux = 3.23434*10**9  photon/s
+    Sigmax = 4.34228510e-01
+    sigmay = 3.00001693e+00
+    Sigmax'= 3.54741332e+01
+    Sigmay'= 9.99999981e+01
+    SigmaLambda = 4.14803671e-05
+Monochromator mosaic :
+    eta0 = 5.200000*10**-3
+    WidthX0 = 1.000000*10**1
+    WidthY0 = 1.100000*10**-2
+    RMono0 = 1.000000*10**-2
+    Rint0 = 1.100000*10**-2
+    thetaB0 = 9.136369*10**-2*pi/180
+Results horizontal :
+    Flux = -2.56758*10**15 photon/s
+    Sigmax = 3.22591529e-01
+    sigmay = 6.17151193e-01
+    Sigmax'= 3.01685473e+01
+    Sigmay'= 9.99999981e+01
+    SigmaLambda = 9.99999981e-04
+Results vertical :
+    Flux = 2.56725*10**15 photon/s
+    Sigmax = 9.05538410e-01
+    sigmay = 2.12056968e+02
+    Sigmax'= 2.99999994e+01
+    Sigmay'= 1.00032272e+02
+    SigmaLambda = 9.99999981e-04
+
+Parabolic Lens :
+z0 = 10000;
+z1 = 20000;
+F0 = 3.676471*10**4
+Radius0 = 1.000000*10**-1
+DistBetwHoles0 = 1.000000*10**0
+Sigma0 = 4.189237*10**-1
+Results horizontal :
+    Flux = 1.78203*10**12 photon/s
+    Sigmax = 6.00177497e-01
+    sigmay = 3.00001693e+00
+    Sigmax'= 1.84724094e+01
+    Sigmay'= 9.99999981e+01
+    SigmaLambda = 9.99999981e-04
+Results vertical :
+Results 2D :
+    Flux = 1.28189*10**-20  photon/s
+    Sigmax = 1.90707991e-01
+    sigmay = 9.90504563e-02
+    Sigmax'= 1.45663785e+01
+    Sigmay'= 1.25251185e+01
+    SigmaLambda = 9.99999981e-04
+
+
 
 ISN_case1 (3 mirrors and a slit)
     Flux =  2.96873*10**12 photon/s

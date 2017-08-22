@@ -19,24 +19,22 @@ z0 = 10000
 z1 = 20000
 ListDistance = [z0, z1]
 
-# Mono data
-Alpha0  = 0
-Wd0     = 1.000000*10**-6
-WidthX0 = 2.000000*10**1
-WidthY0 = 2.000000*10**1
-RMono0  = 9.600000*10**-1
-Rint0   = 1.000000*10**-5
-thetaB0 = 1.140288*10**1 * pi /180
-bMono0  = np.sin(thetaB0+Alpha0)/np.sin(thetaB0-Alpha0)
+# mosaic monochromator data
+eta0 = 5.200000*10**-3
+WidthX0 = 1.000000*10**1
+WidthY0 = 1.100000*10**-2
+RMono0 = 1.000000*10**-2
+Rint0 = 1.100000*10**-2
+thetaB0 = 9.136369*10**-2*pi/180
 
 # object definition
-Mono = ['MonoPlaneVertical', thetaB0, Wd0, RMono0, Rint0, Alpha0, WidthX0, WidthY0,bMono0, matrixMonoPlane(bMono0, thetaB0), np.eye(3)]
-ListObject = [Mono]
+MonoMosaicHorizontal = ['MonoMosaicHorizontal', thetaB0, eta0, Rint0, np.eye(3,3), matrixMonoMosaic(thetaB0),]
+ListObject = [MonoMosaicHorizontal]
 
 # MatTab construction
 [MatTabX, MatTabY] = buildMatTab(ListObject, ListDistance)
 
-# function definition
+#function definition
 IXXP = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[0]
 IYYP = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[1]
 ISigma = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[2]
@@ -50,32 +48,33 @@ print("The symbolic expressions of IXXP is :", IXXPSymb,'and of IYYP :', IYYPSym
 [IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl] = calculateLimits(IXXP, IYYP, ISigma)
 print('The integrations boundaries are :', [IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl])
 
-# plotting section
-# plotXXP(IXXP, 0.1, 5*10**-6, 500)
-# plotYYP(IYYP, 10, 0.0005, 1000)
-# plotAnything(IXint, 0.1, 5*10**-6, 0, 0, 500)
-# plotAnything(IXint, 0, 10**-5, 10**-4, 0, 500)
-# plotAnything(IXint, 0.1, 0, 5*10**-5, 0, 500)
-
 # Sigma calculations
 print('Beginning of geometric integration')
-SigmaXY = beamGeoSize(IXXP,IYYP,ISigma)
+SigmaXY = beamGeoSize(IXXP,IYYP,ISigma, SigmaXPSource, SigmaYPSource, SigmaSLambda)
 print('Beginning of angular integration')
-SigmaXPYP = beamAngularSize(IXXP, IYYP, ISigma)
+SigmaXPYP = beamAngularSize(IXXP, IYYP, ISigma, SigmaXSource, SigmaYSource, SigmaSLambda)
 print('Beginning of flux integration')
-SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, CoefAtten, CoefMonoX, CoefMonoY)
+SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, SigmaXPSource, SigmaYPSource, SigmaXSource, SigmaYSource, SigmaSLambda, CoefAtten, CoefMonoX, CoefMonoY)
 print('SigmaX:%g'%(SigmaXY[0]),' SigmaY:%g'%(SigmaXY[1]))
 print('SigmaXP:%g'%(SigmaXPYP[0]), 'SigmaYP:%g'%(SigmaXPYP[1]))
 print('SigmaLambda:%g'%(SigmaLambdaFlux[0]), 'Flux:%g'%(SigmaLambdaFlux[2]))
 
-# # Results mathematica
-# Result monochromator vertical
-fluxM = 5.17086 * 10 ** 10
-sigmaxyM = [9.05538410e-01, 2.00188970]
-sigmaxpypM = [2.99999994e+01, 6.67286659e+01]
-sigmalambdaM = 3.30851609e-04
+#plotting section
+# def IXint(x, xp, dl):
+#     return IXXP(x, xp, dl) * ISigma(dl)
+# def IYint(x, xp, dl):
+#     return IYYP(x, xp, dl) * ISigma(dl)
+# plotXXP(IXXP, Iota1, Iota2)
+# plotYYP(IYYP, Iota3, Iota4)
+# plotAnything(IYint, 0, 0, 0, 0, 1000)
 
-# Testing section
+# # Results mathematica
+# Result monochromator mosaic horizontal
+fluxM = -2.56758 * 10 ** 15
+sigmaxyM = [3.22591529e-01, 6.17151193e-01]
+sigmaxpypM = [3.01685473e+01, 9.99999981e+01]
+sigmalambdaM = 9.99999981e-04
+
 nut.assert_array_almost_equal(SigmaXY, sigmaxyM, decimal=2)
 nut.assert_array_almost_equal(SigmaXPYP, sigmaxpypM, decimal=2)
 nut.assert_almost_equal(SigmaLambdaFlux[0], sigmalambdaM, decimal=2)

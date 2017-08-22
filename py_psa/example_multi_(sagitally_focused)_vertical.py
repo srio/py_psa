@@ -28,9 +28,10 @@ DfS0 = 1.000000*10**4
 
 # object definition
 MultiVertical = ['MultiVertical', thetaMu0, RML0, RowlandMul0, WsMu0, DfS0, matrixMultilayer(Fmu0), np.eye(3,3)]
-MatTabX = [matrixFlight(z0), MultiVertical[-1], matrixFlight(z1)]
-MatTabY = [matrixFlight(z0), MultiVertical[-2], matrixFlight(z1)]
 ListObject = [MultiVertical]
+
+# MatTab construction
+[MatTabX, MatTabY] = buildMatTab(ListObject, ListDistance)
 
 #function definition
 IXXP = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[0]
@@ -43,10 +44,8 @@ IYYPSymb = sourceFinaleSymbolic(SigmaXSource, SigmaXPSource, SigmaYSource, Sigma
 print("The symbolic expressions of IXXP is :", IXXPSymb,'and of IYYP :', IYYPSymb)
 
 # limit calculation
-print(calculateLimits(IXXP, IYYP, ISigma))
-[Iota1, Iota2] = calculateBetterLimits(IXXP, 0, SigmaXSource, SigmaXPSource, 10**-15)
-[Iota3, Iota4] = calculateBetterLimits(IYYP, 0, SigmaYSource, SigmaYPSource, 10**-15)
-print([Iota1, Iota2, Iota3, Iota4])
+[IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl] = calculateLimits(IXXP, IYYP, ISigma)
+print('The integrations boundaries are :', [IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl])
 
 # Sigma calculations
 print('Beginning of geometric integration')

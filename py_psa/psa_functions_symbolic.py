@@ -72,19 +72,19 @@ def acceptanceAngleMonoPlaneSymbolic(yp, DeltaLambda, ThetaB, Wd, RMono, RInt): 
     return RMono*RInt*sqrt(6/pi)/Wd * sp.exp( -(yp-DeltaLambda*np.tan(ThetaB))**2 / (2*Wd**2/12))
 
 def acceptanceWaveMonoPlaneSymbolic(DeltaLambda, SigmaYp, ThetaB, Wd):                        #Plane monochromator wave acceptance
-    return sqrt(6/pi) * sp.exp( - (DeltaLambda)**2 / (2*(SigmaYp**2+Wd**2/12)*cotan(ThetaB)**2) )
+    return sqrt(6/pi) * sp.exp( - (DeltaLambda)**2 / (2*(SigmaYp**2+Wd**2/12)*cotanSymbolic(ThetaB)**2) )
 
 def acceptanceAngleMonoMosaicSymbolic(yp, DeltaLambda, ThetaB, eta, RInt):                       #Mosaic monochromator angular acceptance
     return RInt*sqrt(6/pi)/eta * sp.exp(- (yp-DeltaLambda*np.tan(ThetaB))**2 / eta**2 /2 )
 
 def acceptanceWaveMonoMosaicSymbolic(DeltaLambda, SigmaYp, ThetaB, eta):                        #Mosaic monochromator wave acceptance
-    return sqrt(6/pi) * sp.exp( - (DeltaLambda)**2 / 2 /((SigmaYp**2+eta**2)*cotan(ThetaB)**2))
+    return sqrt(6/pi) * sp.exp( - (DeltaLambda)**2 / 2 /((SigmaYp**2+eta**2)*cotanSymbolic(ThetaB)**2))
 
 def acceptanceAngleMonoBentSymbolic(y, yp, DeltaLambda, Alpha, ThetaB, Wd, r, RMono, RInt):    #Curved monochromator angle acceptance
     return RMono*RInt*sqrt(6/pi)/Wd * sp.exp( - (yp-y/r/np.sin(ThetaB+Alpha)-DeltaLambda*np.tan(ThetaB))**2/(2*Wd**2/12))
 
 def acceptanceWaveMonoBentSymbolic(DeltaLambda, ThetaB, DistanceFromSource, Wd, SigmaSource):  #Curved monochromator wave acceptance
-    return sqrt(6/pi) * sp.exp( -(DeltaLambda)**2 / (2*cotan(ThetaB)**2*((SigmaSource/DistanceFromSource)**2+Wd**2/12))   )
+    return sqrt(6/pi) * sp.exp( -(DeltaLambda)**2 / (2*cotanSymbolic(ThetaB)**2*((SigmaSource/DistanceFromSource)**2+Wd**2/12))   )
 
 def acceptanceCompLensParaSymbolic(x, Radius, Distance, Sigma):                                          #Compound refractive lense with parabolic holes acceptance
     return sp.exp( -(x**2+Radius*Distance)/2/Sigma**2)
@@ -96,10 +96,27 @@ def acceptanceAngleMultiSymbolic(y, yp, DeltaLambda, ThetaML, Rml, Rowland, Ws):
     return Rml*8/3*sqrt(log(2)/pi) * sp.exp( -(-yp-y/Rowland/np.sin(ThetaML)-DeltaLambda*np.tan(ThetaML))**2*8*log(2)/2/Ws**2 )
 
 def acceptanceWaveMultiSymbolic(DeltaLambda, ThetaML, DistanceFromSource, Ws, SigmaSource):     #Multilayer wave acceptance
-    return sqrt(6/pi) * sp.exp( -(DeltaLambda)**2/2/((SigmaSource/DistanceFromSource)**2+Ws**2/8/log(2))/cotan(ThetaML)**2)
+    return sqrt(6/pi) * sp.exp( -(DeltaLambda)**2/2/((SigmaSource/DistanceFromSource)**2+Ws**2/8/log(2))/cotanSymbolic(ThetaML)**2)
 
 
 # Useful functions for the calculation part
+
+def buildMatTabSymbolic(ListObject, ListDistance):
+    n = len(ListObject)
+    if ListDistance == []:
+        return 'Error, ListDistance is empty'
+    else :
+        MatTabX = [ListDistance[0]]
+        MatTabY = [ListDistance[0]]
+        if n == 0:
+            return [MatTabX, MatTabY]
+        else :
+            for k in range(n):
+                    MatTabX.append(ListObject[k][-1])
+                    MatTabX.append(matrixFlightSymbolic(ListDistance[k+1]))
+                    MatTabY.append(ListObject[k][-2])
+                    MatTabY.append(matrixFlightSymbolic(ListDistance[k+1]))
+            return [MatTabX, MatTabY]
 
 def propagateMatrixListSymbolic(x, xp, y, yp, dl, SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX, MatTabY, ListObject, bMonoX, bMonoY):
     # initiating variables, copies of the arrays are created
@@ -133,14 +150,46 @@ def propagateMatrixListSymbolic(x, xp, y, yp, dl, SigmaXSource, SigmaXPSource, S
                 MatTempX = np.dot(MX[i],MatTempX)
                 MatTempY = np.dot(MY[i], MatTempY)
             if ListObject[k][0] == 'Slit':
-                NewSourceX = NewSourceX * acceptanceSlitSymbolic(MatTempX[0], ListObject[k][1], ListObject[k][4])
-                NewSourceY = NewSourceY * acceptanceSlitSymbolic(MatTempY[0], ListObject[k][2], ListObject[k][4])
+                NewSourceX = NewSourceX * acceptanceSlitSymbolic(MatTempX[0], ListObject[k][1], ListObject[k][3])
+                NewSourceY = NewSourceY * acceptanceSlitSymbolic(MatTempY[0], ListObject[k][2], ListObject[k][3])
+            elif ListObject[k][0] == 'Pinhole' :
+                NewSourceX = NewSourceX * acceptancePinSymbolic(MatTempX[0], ListObject[k][1])
+                NewSourceY = NewSourceY * acceptancePinSymbolic(MatTempX[0], ListObject[k][1])
             elif ListObject[k][0] == 'MonoPlaneVertical':
                 NewSourceY = NewSourceY * acceptanceAngleMonoPlaneSymbolic(MatTempY[1], MatTempY[2], ListObject[k][1], ListObject[k][2], ListObject[k][3], ListObject[k][4])
                 NewSourceY = NewSourceY * acceptanceWaveMonoPlaneSymbolic(MatTempY[2], bMonoY*SigmaYPSource, ListObject[k][1], ListObject[k][2])
             elif ListObject[k][0] == 'MonoPlaneHorizontal':
                 NewSourceX = NewSourceX * acceptanceAngleMonoPlaneSymbolic(MatTempX[1], MatTempX[2], ListObject[k][1], ListObject[k][2], ListObject[k][3], ListObject[k][4])
                 NewSourceX = NewSourceX * acceptanceWaveMonoPlaneSymbolic(MatTempX[2], bMonoX*SigmaXPSource, ListObject[k][1], ListObject[k][2])
+            elif ListObject[k][0] == 'MultiHorizontal':
+                NewSourceX = NewSourceX * acceptanceAngleMultiSymbolic(MatTempX[0], MatTempX[1], MatTempX[2], ListObject[k][1], ListObject[k][2], ListObject[k][3], ListObject[k][4])
+                NewSourceX = NewSourceX * acceptanceWaveMultiSymbolic(MatTempX[2], ListObject[k][1], ListObject[k][5], ListObject[k][4], SigmaXSource)
+            elif ListObject[k][0] == 'MultiVertical' :
+                NewSourceY = NewSourceY * acceptanceAngleMultiSymbolic(MatTempY[0], MatTempY[1], MatTempY[2], ListObject[k][1], ListObject[k][2], ListObject[k][3], ListObject[k][4])
+                NewSourceY = NewSourceY * acceptanceWaveMultiSymbolic(MatTempY[2], ListObject[k][1], ListObject[k][5], ListObject[k][4], SigmaYSource)
+            elif ListObject[k][0] == 'MonoBentHorizontal':
+                NewSourceX = NewSourceX * acceptanceAngleMonoBentSymbolic(MatTempX[0], MatTempX[1], MatTempX[2], ListObject[k][1], ListObject[k][2], ListObject[k][3], ListObject[k][4], ListObject[k][5], ListObject[k][6])
+                NewSourceX = NewSourceX * acceptanceWaveMonoBentSymbolic(MatTempX[2], ListObject[k][2], ListObject[k][7], ListObject[k][3], SigmaXSource)
+            elif ListObject[k][0] == 'MonoBentVertical' :
+                NewSourceY = NewSourceY * acceptanceAngleMonoBentSymbolic(MatTempY[0], MatTempY[1], MatTempY[2],ListObject[k][1], ListObject[k][2], ListObject[k][3], ListObject[k][4], ListObject[k][5], ListObject[k][6])
+                NewSourceY = NewSourceY * acceptanceWaveMonoBentSymbolic(MatTempY[2], ListObject[k][2], ListObject[k][7], ListObject[k][3], SigmaXSource)
+            elif ListObject[k][0] == 'MonoMosaicHorizontal':
+                NewSourceX = NewSourceX * acceptanceAngleMonoMosaicSymbolic(MatTempX[1], MatTempX[2], ListObject[k][1], ListObject[k][2], ListObject[k][3])
+                NewSourceX = NewSourceX * acceptanceWaveMonoMosaicSymbolic(MatTempX[2], SigmaXPSource, ListObject[k][1], ListObject[k][2])
+            elif ListObject[k][0] == 'MonoMosaicVertical' :
+                NewSourceY = NewSourceY * acceptanceAngleMonoMosaicSymbolic(MatTempY[1], MatTempY[2], ListObject[k][1], ListObject[k][2], ListObject[k][3])
+                NewSourceY = NewSourceY * acceptanceWaveMonoMosaicSymbolic(MatTempY[2], SigmaYPSource, ListObject[k][1], ListObject[k][2])
+            elif ListObject[k][0] == 'LensParabolicHorizontal':
+                NewSourceX = NewSourceX * acceptanceCompLensParaSymbolic(MatTempX[0], ListObject[k][1], ListObject[k][2],
+                                                                 ListObject[k][3])
+            elif ListObject[k][0] == 'LensParabolicVertical':
+                NewSourceY = NewSourceY * acceptanceCompLensParaSymbolic(MatTempY[0], ListObject[k][1], ListObject[k][2],
+                                                                 ListObject[k][3])
+            elif ListObject[k][0] == 'LensParabolic2D':
+                NewSourceX = NewSourceX * acceptanceCompLensParaSymbolic(MatTempX[0], ListObject[k][1], ListObject[k][2],
+                                                                 ListObject[k][3])
+                NewSourceY = NewSourceY * acceptanceCompLensParaSymbolic(MatTempY[0], ListObject[k][1], ListObject[k][2],
+                                                                 ListObject[k][3])
             k = k +1
             del MX[0:2]
             del MY[0:2]

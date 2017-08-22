@@ -1,4 +1,4 @@
-from psa_functions import *
+from psa_functions_numeric import *
 
 #TESTING THE FUNCTIONS
 #Testing the matrices

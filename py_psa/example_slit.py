@@ -1,4 +1,5 @@
-from psa_functions import *
+from psa_functions_numeric import *
+from psa_functions_symbolic import *
 
 SourceI = 1e25
 SigmaXSource = 1e-1
@@ -13,22 +14,46 @@ CoefMonoX = 1
 CoefMonoY = 1
 CoefAtten = 1
 
+# distances
 z0 = 10000
 z1 = 12000
+ListDistance = [z0, z1]
+
+# slit data
 AperturSlitX0 = 20
 AperturSlitY0 = 30
-Slit = ['Slit',AperturSlitX0, AperturSlitY0, np.eye(3), 0]
+Slit = ['Slit', AperturSlitX0, AperturSlitY0, 0, np.eye(3), np.eye(3)]
 ListObject = [Slit]
-MatTabX = [matrixFlight(z0), Slit[-2], matrixFlight(z1)]
-MatTabY = [matrixFlight(z0), Slit[-2], matrixFlight(z1)]
 
-SigmaXY = beamGeoSize(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)
-SigmaXPYP = beamAngularSize(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)
-SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX, MatTabY, ListObject, SourceI, CoefAtten, CoefMonoX, CoefMonoY, bMonoX, bMonoY)
+# MatTab construction
+[MatTabX, MatTabY] = buildMatTab(ListObject, ListDistance)
 
-print('SigmaX: ',SigmaXY[0],' SigmaY: ',SigmaXY[1])
-print('SigmaXP:', SigmaXPYP[0], 'SigmaYP:', SigmaXPYP[1])
-print('SigmaLambda:', SigmaLambdaFlux[0], 'Flux:', SigmaLambdaFlux[2])
+#function definition
+IXXP = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[0]
+IYYP = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[1]
+ISigma = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[2]
+
+# Symbolic expressions
+IXXPSymb = sourceFinaleSymbolic(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[0]
+IYYPSymb = sourceFinaleSymbolic(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[1]
+print("The symbolic expressions of IXXP is :", IXXPSymb,'and of IYYP :', IYYPSymb)
+
+# limit calculation
+print(calculateLimits(IXXP, IYYP, ISigma))
+[Iota1, Iota2] = calculateBetterLimits(IXXP, 0, SigmaXSource, SigmaXPSource, 10**-15)
+[Iota3, Iota4] = calculateBetterLimits(IYYP, 0, SigmaYSource, SigmaYPSource, 10**-15)
+print([Iota1, Iota2, Iota3, Iota4])
+
+# Sigma calculations
+print('Beginning of geometric integration')
+SigmaXY = beamGeoSize(IXXP,IYYP,ISigma)
+print('Beginning of angular integration')
+SigmaXPYP = beamAngularSize(IXXP, IYYP, ISigma)
+print('Beginning of flux integration')
+# SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, CoefAtten, CoefMonoX, CoefMonoY)
+print('SigmaX:%g'%(SigmaXY[0]),' SigmaY:%g'%(SigmaXY[1]))
+print('SigmaXP:%g'%(SigmaXPYP[0]), 'SigmaYP:%g'%(SigmaXPYP[1]))
+# print('SigmaLambda:%g'%(SigmaLambdaFlux[0]), 'Flux:%g'%(SigmaLambdaFlux[2]))
 
 # # Results mathematica single slit
 fluxM = 4.24833 * 10 ** 12

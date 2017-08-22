@@ -19,24 +19,27 @@ z0 = 10000
 z1 = 20000
 ListDistance = [z0, z1]
 
-# Mono data
-Alpha0  = 0
-Wd0     = 1.000000*10**-6
-WidthX0 = 2.000000*10**1
-WidthY0 = 2.000000*10**1
-RMono0  = 9.600000*10**-1
-Rint0   = 1.000000*10**-5
-thetaB0 = 1.140288*10**1 * pi /180
+# mono bent data
+Alpha0 = 0
+Wd0 = 1.000000*10**-6
+RowlandRadius0 = 5.000000*10**3
+WidthX0 = 1.000000*10**1
+WidthY0 = 1.000000*10**1
+RMono0  = 9.000000*10**-1
+Rint0   = 1.300000*10**-5
+thetaB0 = 1.035423*10**1*pi/180
+Fc0     = 4.493334*10**3
+DfS0    = 1.000000*10**4
 bMono0  = np.sin(thetaB0+Alpha0)/np.sin(thetaB0-Alpha0)
 
 # object definition
-Mono = ['MonoPlaneVertical', thetaB0, Wd0, RMono0, Rint0, Alpha0, WidthX0, WidthY0,bMono0, matrixMonoPlane(bMono0, thetaB0), np.eye(3)]
-ListObject = [Mono]
+MonoBentVertical = ['MonoBentVertical', Alpha0, thetaB0, Wd0, RowlandRadius0, RMono0, Rint0, DfS0, matrixMonoBent(bMono0, Fc0, thetaB0), np.eye(3, 3)]
+ListObject = [MonoBentVertical]
 
 # MatTab construction
 [MatTabX, MatTabY] = buildMatTab(ListObject, ListDistance)
 
-# function definition
+#function definition
 IXXP = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[0]
 IYYP = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[1]
 ISigma = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[2]
@@ -47,15 +50,8 @@ IYYPSymb = sourceFinaleSymbolic(SigmaXSource, SigmaXPSource, SigmaYSource, Sigma
 print("The symbolic expressions of IXXP is :", IXXPSymb,'and of IYYP :', IYYPSymb)
 
 # limit calculation
-[IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl] = calculateLimits(IXXP, IYYP, ISigma)
-print('The integrations boundaries are :', [IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl])
-
-# plotting section
-# plotXXP(IXXP, 0.1, 5*10**-6, 500)
-# plotYYP(IYYP, 10, 0.0005, 1000)
-# plotAnything(IXint, 0.1, 5*10**-6, 0, 0, 500)
-# plotAnything(IXint, 0, 10**-5, 10**-4, 0, 500)
-# plotAnything(IXint, 0.1, 0, 5*10**-5, 0, 500)
+[IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl]=calculateLimits(IXXP, IYYP, ISigma)
+print([IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl])
 
 # Sigma calculations
 print('Beginning of geometric integration')
@@ -63,19 +59,28 @@ SigmaXY = beamGeoSize(IXXP,IYYP,ISigma)
 print('Beginning of angular integration')
 SigmaXPYP = beamAngularSize(IXXP, IYYP, ISigma)
 print('Beginning of flux integration')
-SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, CoefAtten, CoefMonoX, CoefMonoY)
+# SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, CoefAtten, CoefMonoX, CoefMonoY)
 print('SigmaX:%g'%(SigmaXY[0]),' SigmaY:%g'%(SigmaXY[1]))
 print('SigmaXP:%g'%(SigmaXPYP[0]), 'SigmaYP:%g'%(SigmaXPYP[1]))
-print('SigmaLambda:%g'%(SigmaLambdaFlux[0]), 'Flux:%g'%(SigmaLambdaFlux[2]))
+# print('SigmaLambda:%g'%(SigmaLambdaFlux[0]), 'Flux:%g'%(SigmaLambdaFlux[2]))
+
+#plotting section
+# def IXint(x, xp, dl):
+#     return IXXP(x, xp, dl) * ISigma(dl)
+def IYint(x, xp, dl):
+    return IYYP(x, xp, dl) * ISigma(dl)
+# plotXXP(IXXP, 10*IotaX, 10*IotaXp, 500)
+# plotYYP(IYYP, Iota3, Iota4, 500)
+# plotAnything(IYint, 0, 6.55e-6, 1.31072e-5, 0, 500)
+# plotAnything(IYint, 0, 2.62e-5, 0.00029, 0, 500)
 
 # # Results mathematica
 # Result monochromator vertical
-fluxM = 5.17086 * 10 ** 10
-sigmaxyM = [9.05538410e-01, 2.00188970]
-sigmaxpypM = [2.99999994e+01, 6.67286659e+01]
-sigmalambdaM = 3.30851609e-04
+fluxM = 1.07708 * 10 ** 8
+sigmaxyM = [9.05538410e-01, 4.89927034e-02]
+sigmaxpypM = [2.99999994e+01, 2.51906723e+00]
+sigmalambdaM = 5.69657118e-06
 
-# Testing section
 nut.assert_array_almost_equal(SigmaXY, sigmaxyM, decimal=2)
 nut.assert_array_almost_equal(SigmaXPYP, sigmaxpypM, decimal=2)
 nut.assert_almost_equal(SigmaLambdaFlux[0], sigmalambdaM, decimal=2)
