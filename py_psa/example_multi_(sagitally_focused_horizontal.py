@@ -17,6 +17,7 @@ CoefAtten = 1
 # distances
 z0 = 10000
 z1 = 10000
+ListDistance = [z0,z1]
 
 # multi data
 WsMu0 = 2.015673*10**-2
@@ -49,11 +50,11 @@ print('The integrations boundaries are :', [IotaX, IotaXp, IotaY, IotaYp, IotaXd
 
 # Sigma calculations
 print('Beginning of geometric integration')
-SigmaXY = beamGeoSize(IXXP,IYYP,ISigma, SigmaXPSource, SigmaYPSource, SigmaSLambda)
+SigmaXY = beamGeoSize(IXXP,IYYP,ISigma)
 print('Beginning of angular integration')
-SigmaXPYP = beamAngularSize(IXXP, IYYP, ISigma, SigmaXSource, SigmaYSource, SigmaSLambda)
+SigmaXPYP = beamAngularSize(IXXP, IYYP, ISigma)
 print('Beginning of flux integration')
-SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, SigmaXPSource, SigmaYPSource, SigmaXSource, SigmaYSource, SigmaSLambda, CoefAtten, CoefMonoX, CoefMonoY)
+SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, SigmaXPSource, SigmaYPSource, SigmaXSource, SigmaYSource)
 print('SigmaX:%g'%(SigmaXY[0]),' SigmaY:%g'%(SigmaXY[1]))
 print('SigmaXP:%g'%(SigmaXPYP[0]), 'SigmaYP:%g'%(SigmaXPYP[1]))
 print('SigmaLambda:%g'%(SigmaLambdaFlux[0]), 'Flux:%g'%(SigmaLambdaFlux[2]))
@@ -66,8 +67,8 @@ print('SigmaLambda:%g'%(SigmaLambdaFlux[0]), 'Flux:%g'%(SigmaLambdaFlux[2]))
 #     return IXXP(x, xp, dl) * ISigma(dl)
 # def IYint(x, xp, dl):
 #     return IYYP(x, xp, dl) * ISigma(dl)
-# plotXXP(IXXP, Iota1, Iota2)
-# plotYYP(IYYP, Iota3, Iota4)
+plotXXP(IXXP, IotaX, IotaXp, 500)
+plotYYP(IYYP, IotaY, IotaYp, 500)
 # plotAnything(IYint, 0, 0, 0, 0, 1000)
 
 # nut.assert_array_almost_equal(SigmaXY, sigmaxyM, decimal=2)

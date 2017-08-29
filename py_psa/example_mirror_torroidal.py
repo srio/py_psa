@@ -67,10 +67,10 @@ SigmaXY = beamGeoSize(IXXP,IYYP,ISigma)
 print('Beginning of angular integration')
 SigmaXPYP = beamAngularSize(IXXP, IYYP, ISigma)
 print('Beginning of flux integration')
-SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, CoefAtten, CoefMonoX, CoefMonoY)
+# SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, CoefAtten, CoefMonoX, CoefMonoY)
 print('SigmaX:%g'%(SigmaXY[0]),' SigmaY:%g'%(SigmaXY[1]))
 print('SigmaXP:%g'%(SigmaXPYP[0]), 'SigmaYP:%g'%(SigmaXPYP[1]))
-print('SigmaLambda:%g'%(SigmaLambdaFlux[0]), 'Flux:%g'%(SigmaLambdaFlux[2]))
+# print('SigmaLambda:%g'%(SigmaLambdaFlux[0]), 'Flux:%g'%(SigmaLambdaFlux[2]))
 
 # # Results mathematica
 # Result monochromator horizontal
@@ -82,6 +82,6 @@ sigmalambdaM = 9.99999981e-04
 # comparing results
 nut.assert_array_almost_equal(SigmaXY, sigmaxyM, decimal=2)
 nut.assert_array_almost_equal(SigmaXPYP, sigmaxpypM, decimal=2)
-nut.assert_almost_equal(SigmaLambdaFlux[0], sigmalambdaM, decimal=2)
-nut.assert_almost_equal(SigmaLambdaFlux[2], fluxM , decimal=2)
+# nut.assert_almost_equal(SigmaLambdaFlux[0], sigmalambdaM, decimal=2)
+# nut.assert_almost_equal(SigmaLambdaFlux[2], fluxM , decimal=2)
 

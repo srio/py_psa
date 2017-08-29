@@ -67,7 +67,7 @@ plotYYP(IYYP, IotaY, IotaYp, 500)
 # Results mathematica
 # no data
 
-nut.assert_array_almost_equal(SigmaXY, sigmaxyM, decimal=2)
-nut.assert_array_almost_equal(SigmaXPYP, sigmaxpypM, decimal=2)
-nut.assert_almost_equal(SigmaLambdaFlux[0], sigmalambdaM, decimal=2)
-nut.assert_almost_equal(SigmaLambdaFlux[2], fluxM , decimal=2)
+# nut.assert_array_almost_equal(SigmaXY, sigmaxyM, decimal=2)
+# nut.assert_array_almost_equal(SigmaXPYP, sigmaxpypM, decimal=2)
+# nut.assert_almost_equal(SigmaLambdaFlux[0], sigmalambdaM, decimal=2)
+# nut.assert_almost_equal(SigmaLambdaFlux[2], fluxM , decimal=2)
