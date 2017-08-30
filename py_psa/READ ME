@@ -10,9 +10,9 @@ LensParabolicVertical = ['LensParabolicVertical', Radius0, DistBetwHoles0, Sigma
 LensParabolic2D = ['LensParabolic2D', Radius0, DistBetwHoles0, Sigma0, matrixCompLensPara(F0), matrixCompLensPara(F0)]
 
 *Mirrors*
-Mirror = ['MirrorBentHorizontal', np.eye(3), matrixMirror(IncAng0, Sigma0, Lambda0, Delta0, Fm0, S)]
-MirrorBentVertical = ['MirrorBentVertical', matrixMirror(IncAng0, Sigma0, Lambda0, Delta0, Fm0, S), np.eye(3)]
-MirrorToroidal= ['MirrorToroidal', IncAng0, SigmaX0, SigmaY0, Lambda0, DeltaX0, DeltaY0, FmX0, FmY0, SX, SY, matrixMirror(IncAng0, SigmaY0, Lambda0, DeltaY0, FmY0, SY), matrixMirror(IncAng0, SigmaX0, Lambda0, DeltaX0, FmX0, SX)]
+Mirror = ['Mirror', np.eye(3), matrixMirror(IncAng0, Sigma0, Lambda0, Delta0, Fm0, S)]
+MirrorBentVertical = ['Mirror', matrixMirror(IncAng0, Sigma0, Lambda0, Delta0, Fm0, S), np.eye(3)]
+MirrorToroidal= ['Mirror', IncAng0, SigmaX0, SigmaY0, Lambda0, DeltaX0, DeltaY0, FmX0, FmY0, SX, SY, matrixMirror(IncAng0, SigmaY0, Lambda0, DeltaY0, FmY0, SY), matrixMirror(IncAng0, SigmaX0, Lambda0, DeltaX0, FmX0, SX)]
 
 *Monochromators*
 MonoBentHorizontal = ['MonoBentHorizontal', Alpha0, thetaB0, Wd0, RowlandRadius0, RMono0, Rint0, DfS0, np.eye(3, 3), matrixMonoBent(bMono0, Fc0, thetaB0)]

@@ -28,7 +28,7 @@ Fm0 = 8.333333*10**3
 S = 1
 
 #object definition
-MirrorBentVertical = ['MirrorBentVertical', matrixMirror(IncAng0, Sigma0, Lambda0, Delta0, Fm0, S), np.eye(3)]
+MirrorBentVertical = ['Mirror', matrixMirror(IncAng0, Sigma0, Lambda0, Delta0, Fm0, S), np.eye(3)]
 ListObject = [MirrorBentVertical]
 
 # MatTab construction

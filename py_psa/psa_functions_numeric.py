@@ -218,9 +218,10 @@ def propagateMatrixList(x, xp, y, yp, dl, SigmaXSource, SigmaXPSource, SigmaYSou
                 pass
             elif ListObject[k][0] == 'LensIdealVertical':
                 pass
+            elif ListObject[k][0] == 'Mirror':
+                pass
             else:
                 raise Exception("Wrong element name")
-
             k = k + 1
             del MX[0:2]
             del MY[0:2]

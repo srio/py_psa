@@ -220,15 +220,14 @@ Results 2D :
     Sigmay'= 1.25251185e+01
     SigmaLambda = 9.99999981e-04
 
+Results 2 objects
+Data used : monochromator plane vertical and toroidal mirror, the only difference being Theta0 = 10.354 for the mono
+fluxM = 8.46873*10**10
+sigmaxyM = [3.02492754e-01, 7.73693941e-01]
+sigmaxpypM = [1.00607688e+01, 2.42056288e+01]
+sigmalambdaM = 1.32489954e-04
 
 
-ISN_case1 (3 mirrors and a slit)
-    Flux =  2.96873*10**12 photon/s
-    Sigmax = 2.56965283e+01
-    sigmay =  53.62038705e+02
-    Sigmax'= 3.21465329e+03
-    Sigmay'= 4.41940352e+04
-    SigmaLambda = 9.99999981e-04
 Results :
     Flux =   photon/s
     Sigmax =

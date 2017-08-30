@@ -1,0 +1,251 @@
+1,89c1,21
+< (************** Content-type: application/mathematica **************
+<                      CreatedBy='Mathematica 5.0'
+< 
+<                     Mathematica-Compatible Notebook
+< 
+< This notebook can be used with any Mathematica-compatible
+< application, such as Mathematica, MathReader or Publicon. The data
+< for the notebook starts with the line containing stars above.
+< 
+< To get the notebook into a Mathematica-compatible application, do
+< one of the following:
+< 
+< * Save the data starting with the line of stars above into a file
+<   with a name ending in .nb, then open the file inside the
+<   application;
+< 
+< * Copy the data starting with the line of stars above to the
+<   clipboard, then use the Paste menu command inside the application.
+< 
+< Data for notebooks contains only printable 7-bit ASCII and can be
+< sent directly in email or through ftp in text mode.  Newlines can be
+< CR, LF or CRLF (Unix, Macintosh or MS-DOS style).
+< 
+< NOTE: If you modify the data for this notebook not in a Mathematica-
+< compatible application, you must delete the line below containing
+< the word CacheID, otherwise Mathematica-compatible applications may
+< try to use invalid cache data.
+< 
+< For more information on notebooks and Mathematica-compatible 
+< applications, contact Wolfram Research:
+<   web: http://www.wolfram.com
+<   email: info@wolfram.com
+<   phone: +1-217-398-0700 (U.S.)
+< 
+< Notebook reader applications are available free of charge from 
+< Wolfram Research.
+< *******************************************************************)
+< 
+< (*CacheID: 232*)
+< 
+< 
+< (*NotebookFileLineBreakTest
+< NotebookFileLineBreakTest*)
+< (*NotebookOptionsPosition[      6748,        208]*)
+< (*NotebookOutlinePosition[      7378,        230]*)
+< (*  CellTagsIndexPosition[      7334,        226]*)
+< (*WindowFrame->Normal*)
+< 
+< 
+< 
+< Notebook[{
+< Cell["\<\
+< (*******************************************************************\
+< *********)
+< (*                                                                          \
+< *)
+< (* Application: PSA interface under Tcl/Tk                                  \
+< *)
+< (*                                                                          \
+< *)
+< (* Module:      Integrations.cmd                                            \
+< *)
+< (*                                                                          \
+< *)
+< (* Use:         This file contains all integrations needed for the          \
+< *)
+< (*              phase space analysis                                        \
+< *)
+< (*                                                                          \
+< *)
+< (* Author:      Peter J. Daly and Andreas 'Mounty' Bergmann                 \
+< *)
+< (*                                                                          \
+< *)
+< (* Date:        January, 1995                                               \
+< *)
+< (*                                                                          \
+< *)
+< (* Copyright:   ESRF, BP220, F-38043 GRENOBLE cedex, France.                \
+< *)
+< (*                                                                          \
+< *)
+< (****************************************************************************)\
+< 
+< 
+< 
+< \t(****************)
+< \t(* Integrations *)
+< \t(****************)
+---
+> (****************************************************************************)
+> (*                                                                          *)
+> (* Application: PSA interface under Tcl/Tk                                  *)
+> (*                                                                          *)
+> (* Module:      Integrations.cmd                                            *)
+> (*                                                                          *)
+> (* Use:         This file contains all integrations needed for the          *)
+> (*              phase space analysis                                        *)
+> (*                                                                          *)
+> (* Author:      Peter J. Daly and Andreas 'Mounty' Bergmann                 *)
+> (*                                                                          *)
+> (* Date:        January, 1995                                               *)
+> (*                                                                          *)
+> (* Copyright:   ESRF, BP220, F-38043 GRENOBLE cedex, France.                *)
+> (*                                                                          *)
+> (****************************************************************************)
+> 
+> 
+> 	(****************)
+> 	(* Integrations *)
+> 	(****************)
+93,96c25,27
+< \tIntegralXXP[x_,xp_]=NewSourceX[x,xp,0],
+< \tIntegralXXP[x_,xp_]=
+<         Integrate[NewSourceX[x,xp,dl],{dl,-Infinity,Infinity},\
+< GenerateConditions -> False]
+---
+> 	IntegralXXP[x_,xp_]=NewSourceX[x,xp,0],
+> 	IntegralXXP[x_,xp_]=
+>         Integrate[NewSourceX[x,xp,dl],{dl,-Infinity,Infinity},GenerateConditions -> False]
+102,105c33,35
+< \tIntegralYYP[y_,yp_]=NewSourceY[y,yp,0],
+< \tIntegralYYP[y_,yp_]=
+<         Integrate[NewSourceY[y,yp,dl],{dl,-Infinity,Infinity},\
+< GenerateConditions -> False]
+---
+> 	IntegralYYP[y_,yp_]=NewSourceY[y,yp,0],
+> 	IntegralYYP[y_,yp_]=
+>         Integrate[NewSourceY[y,yp,dl],{dl,-Infinity,Infinity},GenerateConditions -> False]
+115,118c45,47
+< \tIntegralXYXPYP[x_,y_,xp_,yp_]=IntegralXYXPYPdl[x,y,xp,yp,0],
+< \tIntegralXYXPYP[x_,y_,xp_,yp_]=
+<         Integrate[IntegralXYXPYPdl[x,y,xp,yp,dl],{dl,-Infinity,Infinity},\
+< GenerateConditions -> False]
+---
+> 	IntegralXYXPYP[x_,y_,xp_,yp_]=IntegralXYXPYPdl[x,y,xp,yp,0],
+> 	IntegralXYXPYP[x_,y_,xp_,yp_]=
+>         Integrate[IntegralXYXPYPdl[x,y,xp,yp,dl],{dl,-Infinity,Infinity},GenerateConditions -> False]
+122,131c51,55
+< (****************************************************************************)\
+< 
+< (*                                                                          \
+< *)
+< (*  Calculations for the FWHM-values (geometric size) of the beam           \
+< *)
+< (*                                                                          \
+< *)
+< (****************************************************************************)\
+< 
+---
+> (****************************************************************************)
+> (*                                                                          *)
+> (*  Calculations for the FWHM-values (geometric size) of the beam           *)
+> (*                                                                          *)
+> (****************************************************************************)
+134,137c58,60
+< \tIntegralXYXP[x_,y_,xp_]=IntegralXYXPYP[x,y,xp,0],
+< \tIntegralXYXP[x_,y_,xp_]=
+<         Integrate[IntegralXYXPYP[x,y,xp,yp],{yp,-Infinity,Infinity},\
+< GenerateConditions -> False] 
+---
+> 	IntegralXYXP[x_,y_,xp_]=IntegralXYXPYP[x,y,xp,0],
+> 	IntegralXYXP[x_,y_,xp_]=
+>         Integrate[IntegralXYXPYP[x,y,xp,yp],{yp,-Infinity,Infinity},GenerateConditions -> False] 
+143,146c66,68
+< \tIntegralXY[x_,y_]=IntegralXYXP[x,y,0],
+< \tIntegralXY[x_,y_]=
+<         Integrate[IntegralXYXP[x,y,xp],{xp,-Infinity,Infinity},\
+< GenerateConditions -> False] 
+---
+> 	IntegralXY[x_,y_]=IntegralXYXP[x,y,0],
+> 	IntegralXY[x_,y_]=
+>         Integrate[IntegralXYXP[x,y,xp],{xp,-Infinity,Infinity},GenerateConditions -> False] 
+150c72
+< \tMaxFlux=N[IntegralXY[0,0]];
+---
+> 	MaxFlux=N[IntegralXY[0,0]];
+163,172c85,89
+< (****************************************************************************)\
+< 
+< (*                                                                          \
+< *)
+< (*    Calculations for the FWHMp-values (angle size) of the beam            \
+< *)
+< (*                                                                          \
+< *)
+< (****************************************************************************)\
+< 
+---
+> (****************************************************************************)
+> (*                                                                          *)
+> (*    Calculations for the FWHMp-values (angle size) of the beam            *)
+> (*                                                                          *)
+> (****************************************************************************)
+175,178c92,94
+< \tIntegralXXPYP[x_,xp_,yp_]=IntegralXYXPYP[x,0,xp,yp],
+< \tIntegralXXPYP[x_,xp_,yp_]=
+<         Integrate[IntegralXYXPYP[x,y,xp,yp],{y,-Infinity,Infinity},\
+< GenerateConditions -> False]
+---
+> 	IntegralXXPYP[x_,xp_,yp_]=IntegralXYXPYP[x,0,xp,yp],
+> 	IntegralXXPYP[x_,xp_,yp_]=
+>         Integrate[IntegralXYXPYP[x,y,xp,yp],{y,-Infinity,Infinity},GenerateConditions -> False]
+184,187c100,102
+< \tIntegralXPYP[xp_,yp_]=IntegralXYXPYP[0,xp,yp],
+< \tIntegralXPYP[xp_,yp_]=
+<         Integrate[IntegralXXPYP[x,xp,yp],{x,-Infinity,Infinity},\
+< GenerateConditions -> False]
+---
+> 	IntegralXPYP[xp_,yp_]=IntegralXYXPYP[0,xp,yp],
+> 	IntegralXPYP[xp_,yp_]=
+>         Integrate[IntegralXXPYP[x,xp,yp],{x,-Infinity,Infinity},GenerateConditions -> False]
+206,242d120
+< \
+< \>", "Input"]
+< },
+< FrontEndVersion->"5.0 for X",
+< ScreenRectangle->{{0, 1280}, {0, 977}},
+< WindowSize->{1090, 688},
+< WindowMargins->{{Automatic, 89}, {Automatic, 93}}
+< ]
+< 
+< (*******************************************************************
+< Cached data follows.  If you edit this Notebook file directly, not
+< using Mathematica, you must remove the line containing CacheID at
+< the top of  the file.  The cache data will then be recreated when
+< you save this file from within Mathematica.
+< *******************************************************************)
+< 
+< (*CellTagsOutline
+< CellTagsIndex->{}
+< *)
+< 
+< (*CellTagsIndex
+< CellTagsIndex->{}
+< *)
+< 
+< (*NotebookFileOutline
+< Notebook[{
+< Cell[1754, 51, 4990, 155, 2452, "Input"]
+< }
+< ]
+< *)
+< 
+< 
+< 
+< (*******************************************************************
+< End of Mathematica Notebook file.
+< *******************************************************************)
+< 
