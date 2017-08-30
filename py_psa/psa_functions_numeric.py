@@ -9,6 +9,12 @@ import mpmath as mp
 import matplotlib.pylab as plt
 
 
+try:
+    plt.switch_backend("Qt5Agg")
+except:
+    raise Exception("Failed to set matplotlib backend to Qt5Agg")
+
+
 #DEFINITION OF MATHEMATICAL OBJECTS
 #Definition of the transformation matrices
 
@@ -206,6 +212,15 @@ def propagateMatrixList(x, xp, y, yp, dl, SigmaXSource, SigmaXPSource, SigmaYSou
                                                                  ListObject[k][3])
                 NewSourceY = NewSourceY * acceptanceCompLensPara(MatTempY[0], ListObject[k][1], ListObject[k][2],
                                                                  ListObject[k][3])
+            elif ListObject[k][0] == 'LensIdeal2D':
+                pass
+            elif ListObject[k][0] == 'LensIdealHorizontal':
+                pass
+            elif ListObject[k][0] == 'LensIdealVertical':
+                pass
+            else:
+                raise Exception("Wrong element name")
+
             k = k + 1
             del MX[0:2]
             del MY[0:2]
@@ -363,6 +378,39 @@ def doubleIntegralDenullification(f, k, Iota1, Iota2):
 def sigmaCalc(Eval, ValueExponent, ValueA):
     return 1 / 2 / sqrt(2 * np.log(2)) * sqrt(4 * log(2) * Eval**2 / -log(ValueExponent / ValueA))
 
+def plotAB(IXXP, IotaX, IotaXp, NumPoints, title="XXP",xtitle="X",ytitle="XP"):
+    x = np.linspace(-IotaX, IotaX, NumPoints)
+    xp = np.linspace(-IotaXp, IotaXp, NumPoints)
+    X = np.outer(x, np.ones_like(xp))
+    XXP = np.zeros_like(X)
+
+    for ix, xval in enumerate(x):
+        for ixp, xpval in enumerate(xp):
+            XXP[ix, ixp] = IXXP(xval, xpval, 0)
+
+    print("Integral of "+title, XXP.sum() * (x[1] - x[0]) * (xp[1] - xp[0]))
+
+    print(title+" shape", XXP.shape)
+
+    fig = plt.figure()
+
+    # cmap = plt.cm.Greys
+    plt.imshow(XXP.T, origin='lower', extent=[x[0], x[-1], xp[0], xp[-1]], cmap=None, aspect='auto')
+    plt.colorbar()
+    ax = fig.gca()
+    ax.set_xlabel(xtitle)
+    ax.set_ylabel(ytitle)
+
+    plt.title(title)
+    plt.show()
+
+    plt.plot(x, XXP.sum(axis=1))
+    plt.title(title+" integrated vs horizontal")
+    plt.show()
+    plt.plot(xp, XXP.sum(axis=0))
+    plt.title(title+" integrated vs vertical")
+    plt.show()
+
 def plotXXP(IXXP, IotaX, IotaXp, NumPoints):
     x = np.linspace(-IotaX, IotaX, NumPoints)
     xp = np.linspace(-IotaXp, IotaXp, NumPoints)
@@ -419,7 +467,7 @@ def plotYYP(IYYP, IotaY, IotaYp, NumPoints):
     ax.set_xlabel("Y")
     ax.set_ylabel("YP")
 
-    plt.title("TITLE")
+    plt.title("Y - YP")
     plt.show()
 
     plt.plot(y, YYP.sum(axis=1))
@@ -768,6 +816,8 @@ def sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, CoefAtten, CoefMonoX, CoefMonoY,
             FluxPhi = si.nquad(IXint, [[-IotaXBest, IotaXBest], [-IotaXpBest, IotaXpBest], [-IotaXdlBest, IotaXdlBest]], opts=[options, options, options])
         elif Method == 1:
             FluxPhi = cheapTripleIntegral(IXint, IotaXBest, IotaXpBest, IotaXdlBest, 181)
+        else:
+            raise Exception("Not valid Method")
         print(FluxPhi)
         FluxPhi = IyIntegrated * FluxPhi
         FluxPhi = CoefAtten * CoefMonoX * CoefMonoY * FluxPhi
