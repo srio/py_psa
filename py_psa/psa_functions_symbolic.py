@@ -190,6 +190,15 @@ def propagateMatrixListSymbolic(x, xp, y, yp, dl, SigmaXSource, SigmaXPSource, S
                                                                  ListObject[k][3])
                 NewSourceY = NewSourceY * acceptanceCompLensParaSymbolic(MatTempY[0], ListObject[k][1], ListObject[k][2],
                                                                  ListObject[k][3])
+            elif ListObject[k][0] == 'LensIdeal2D':
+                pass
+            elif ListObject[k][0] == 'LensIdealHorizontal':
+                pass
+            elif ListObject[k][0] == 'LensIdealVertical':
+                pass
+            else:
+                raise Exception("Wrong element name")
+            
             k = k +1
             del MX[0:2]
             del MY[0:2]
