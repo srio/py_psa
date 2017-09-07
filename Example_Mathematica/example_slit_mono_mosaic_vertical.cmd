@@ -43,27 +43,34 @@ BMonoY          = 1;
 (* Definition of the Flight-Paths            *)
 (*********************************************)
                                             
-z0 = 32000;
-z1 = 3000;
+z0 = 28000;
+z1 = 2000;
+z2 = 2000;
                                             
 (*************************************************************)
 (* Definition of the parameters of the used optical elements *)
 (*************************************************************)
                                             
                                             
-(* Parameters for the 0. Element: MultiLayer *)
+(* Parameters for the 0. Element: Slit *)
                                             
-WsMu0       = 1.653743*10^-4;
-RML0        = 1.000000*10^0;
-RowlandMul0 = 5.000000*10^3;
-thetaMu0    = 6.720000*10^-1*Degree;
-Fmu0        = 1.556381*10^3;
-DfS0        = 3.200000*10^4;
+AperturSlitX0 = 1.000000*10^-1;
+AperturSlitY0 = 1.000000*10^-1;
+                                            
+(* Parameters for the 1. Element: Mosaic Monochromator *)
+                                            
+eta1  = 5.240000*10^-3;
+WidthX1 = 1.000000*10^1;
+WidthY1 = 1.100000*10^-2;
+RMono1  = 1.000000*10^-2;
+Rint1   = 1.100000*10^-2;
+thetaB1 = 9.136369*10^-2*Degree;
                                             
                                             
                                             
-Get["/users/bmiller/psa_gatta3/cmd/MatrixDefinition.cmd"];
+Get["/users/bmiller/psa_gatta2/cmd/MatrixDefinition.cmd"];
                                             
+Get["/mntdirect/_users/bmiller/psa_gatta2/bin/math_PreCalc.cmd"];
                                             
 (*********************************************)
 (* Transformation of the source              *)
@@ -72,13 +79,16 @@ Get["/users/bmiller/psa_gatta3/cmd/MatrixDefinition.cmd"];
 MatrixTempX=
 MatrixFlight[z0].
 MatrixFlight[z1].
+MatrixMonoFirst[CoefX1].
+MatrixFlight[z2].
 {x,xp,dl};
                                             
                                             
 MatrixTempY=
 MatrixFlight[z0].
-MatrixMultilayer[Fmu0].
 MatrixFlight[z1].
+MatrixMonoMosaic[thetaB1,CoefY1].
+MatrixFlight[z2].
 {y,yp,dl};
                                             
 MatrixTempX=Rationalize[Simplify[MatrixTempX],0];
@@ -94,23 +104,45 @@ NewSourceY[y_,yp_,dl_]=Simplify[NewSourceY[y,yp,dl]];
 (* Now the source has been transformed into NewSource  *)
 (*******************************************************)
                                             
+MatrixTempX=
+MatrixFlight[z1].
+MatrixMonoFirst[CoefX1].
+MatrixFlight[z2].
+{x,xp,dl};
                                             
                                             
 MatrixTempY=
-MatrixMultilayer[Fmu0].
 MatrixFlight[z1].
+MatrixMonoMosaic[thetaB1,CoefY1].
+MatrixFlight[z2].
+{y,yp,dl};
+                                            
+MatrixTempX=Rationalize[Simplify[MatrixTempX],0];
+MatrixTempY=Rationalize[Simplify[MatrixTempY],0];
+                                            
+NewSourceX[x_,xp_,dl_]=NewSourceX[x,xp,dl]*AcceptanceSlit[ MatrixTempX[[1]], AperturSlitX0, 0 ];
+NewSourceY[y_,yp_,dl_]=NewSourceY[y,yp,dl]*AcceptanceSlit[ MatrixTempY[[1]], AperturSlitY0, 0 ];
+                                            
+NewSourceX[x_,xp_,dl_]=Simplify[NewSourceX[x,xp,dl]];
+NewSourceY[y_,yp_,dl_]=Simplify[NewSourceY[y,yp,dl]];
+                                            
+                                            
+                                            
+MatrixTempY=
+MatrixMonoMosaic[thetaB1,CoefY1].
+MatrixFlight[z2].
 {y,yp,dl};
                                             
 MatrixTempY=Rationalize[Simplify[MatrixTempY],0];
                                             
-NewSourceY[y_,yp_,dl_]=NewSourceY[y,yp,dl]*AcceptanceAngleMulti[ MatrixTempY[[1]], MatrixTempY[[2]], MatrixTempY[[3]], thetaMu0, RML0, RowlandMul0, WsMu0 ];
+NewSourceY[y_,yp_,dl_]=NewSourceY[y,yp,dl]*AcceptanceAngleMonoMosaic[ MatrixTempY[[2]], MatrixTempY[[3]], thetaB1, eta1, RMono1, Rint1 ];
                                             
 NewSourceY[y_,yp_,dl_]=Simplify[NewSourceY[y,yp,dl]];
                                             
                                             
 MatrixTempY=Rationalize[Simplify[MatrixTempY],0];
                                             
-NewSourceY[y_,yp_,dl_]=NewSourceY[y,yp,dl]*AcceptanceWaveMulti[ MatrixTempY[[3]], thetaMu0, DfS0, WsMu0, SigmaYSource ];
+NewSourceY[y_,yp_,dl_]=NewSourceY[y,yp,dl]*AcceptanceWaveMonoMosaic[ MatrixTempY[[3]], BMonoY*SigmaYPSource, thetaB1, eta1 ];
                                             
 NewSourceY[y_,yp_,dl_]=Simplify[NewSourceY[y,yp,dl]];
                                             
@@ -118,11 +150,11 @@ NewSourceY[y_,yp_,dl_]=Simplify[NewSourceY[y,yp,dl]];
 (* Starting the Integrations *)
 (*****************************)
                                            
-DlLow = -1.326872*10^-4;
-DlUp = 1.326872*10^-4;
+DlLow = -3.534557*10^2;
+DlUp = 3.534557*10^2;
 CoefAtten = 1;
-Get["/users/bmiller/psa_gatta3/cmd/Flux.cmd"];
-Get["/users/bmiller/psa_gatta3/cmd/Integrations.cmd"];
+Get["/users/bmiller/psa_gatta2/cmd/Flux.cmd"];
+Get["/users/bmiller/psa_gatta2/cmd/Integrations.cmd"];
                                            
                                            
 (****************************)
@@ -130,10 +162,10 @@ Get["/users/bmiller/psa_gatta3/cmd/Integrations.cmd"];
 (****************************)
                                            
                                            
-$DisplayTitle="Intensity at position 35000";
+$DisplayTitle="Intensity at position 32000";
 $DisplayWidth=600;
 $DisplayHeight=300;
   
-Get["/users/bmiller/psa_gatta3/cmd/Graphics.cmd"];
+Get["/users/bmiller/psa_gatta2/cmd/Graphics.cmd"];
   
   

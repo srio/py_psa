@@ -228,6 +228,25 @@ sigmaxpypM = [1.00607688e+01, 2.42056288e+01]
 sigmalambdaM = 1.32489954e-04
 
 
+Multilayer data :
+z0 = 32000
+z1 = 3000
+N = 200
+a = 45
+R = 5000
+ThetaML = 0.672
+RML = 1
+Vertical :
+    fluxM = 6.968*10**8
+    sigmaxyM = [1.05475151e+00 , 3.60202896e-03]
+    sigmaxpypM = [2.99999994e+01 , 2.56712185e+00]
+    sigmalambdaM = 9.86338640e-04
+Horizontal :
+    fluxM = 6.968*10**8
+    sigmaxyM = [ 3.60202896e-03  ,1.05475151e+00]
+    sigmaxpypM = [2.56712185e+00, 2.99999994e+01]
+    sigmalambdaM = 9.86338640e-04
+
 Results :
     Flux =   photon/s
     Sigmax =

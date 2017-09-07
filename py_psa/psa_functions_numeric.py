@@ -8,7 +8,7 @@ import scipy.integrate as si
 import mpmath as mp
 import matplotlib.pylab as plt
 
-
+# these three lines are in case you work with a specific software
 try:
     plt.switch_backend("Qt5Agg")
 except:
@@ -60,6 +60,7 @@ def cotan(x):
     return 1/np.tan(x)
 
 def acceptanceSlit(y, Aperture, calctype):                                                           #Slit acceptance
+    # there are two methods because sometimes you have too many photons out of the slit, its an experimental problem, not a theory problem
     if calctype==0:
         return sqrt(6/pi) / sqrt(6*log(2)/pi) * exp( -(y/Aperture)**2/2*12)
     if calctype==1:
@@ -88,13 +89,14 @@ def acceptanceAngleMonoBent(y, yp, DeltaLambda, Alpha, ThetaB, Wd, r, RMono, RIn
 
 def acceptanceWaveMonoBent(DeltaLambda, ThetaB, DistanceFromSource, Wd, SigmaSource):
     #Curved monochromator wave acceptance
-    return sqrt(6/pi) * exp( -(DeltaLambda)**2 / (2*cotan(ThetaB)**2*((SigmaSource/DistanceFromSource)**2+Wd**2/12))   )
+    return sqrt(6/pi) * exp( -(DeltaLambda)**2 / (2*cotan(ThetaB)**2*((SigmaSource/DistanceFromSource)**2+Wd**2/12)))
 
 def acceptanceCompLensPara(x, Radius, Distance, Sigma):    #Compound refractive lense with parabolic holes acceptance
     return exp( -(x**2+Radius*Distance)/2/Sigma**2)
 
-def acceptanceCompLensCirc(x, Radius, Distance, Sigma, FWHM): #Compound refractive lense with circular holes acceptance
-    return exp( -x**2/2/Sigma**2 -x**2*FWHM**2/8/Radius**2/Sigma**2 -x**2*FWHM**4/16/Sigma**2/Radius**4 -Radius*Distance/2/Sigma**2  )
+# this was not used finally
+# def acceptanceCompLensCirc(x, Radius, Distance, Sigma, FWHM): #Compound refractive lense with circular holes acceptance
+#     return exp( -x**2/2/Sigma**2 -x**2*FWHM**2/8/Radius**2/Sigma**2 -x**2*FWHM**4/16/Sigma**2/Radius**4 -Radius*Distance/2/Sigma**2  )
 
 def acceptanceAngleMulti(y, yp, DeltaLambda, ThetaML, Rml, Rowland, Ws):                #Multilayer angle acceptance
     return Rml*8/3*sqrt(log(2)/pi) * exp( -(-yp-y/Rowland/np.sin(ThetaML)-DeltaLambda*np.tan(ThetaML))**2*8*log(2)/2/Ws**2 )
@@ -106,6 +108,7 @@ def acceptanceWaveMulti(DeltaLambda, ThetaML, DistanceFromSource, Ws, SigmaSourc
 # Useful functions for the calculation part
 
 def buildMatTab(ListObject, ListDistance):
+    # this function builds a list of matrices used in the next function
     n = len(ListObject)
     if ListDistance == []:
         return 'Error, ListDistance is empty'
@@ -122,7 +125,9 @@ def buildMatTab(ListObject, ListDistance):
                     MatTabY.append(matrixFlight(ListDistance[k+1]))
             return [MatTabX, MatTabY]
 
-def propagateMatrixList(x, xp, y, yp, dl, SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX, MatTabY, ListObject, bMonoX, bMonoY):
+
+def propagateMatrixList(x, xp, y, yp, dl, SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource,
+                            MatTabX, MatTabY, ListObject, bMonoX, bMonoY):
     # initiating variables, copies of the arrays are created
     MX = MatTabX.copy()
     MY = MatTabY.copy()
@@ -151,7 +156,7 @@ def propagateMatrixList(x, xp, y, yp, dl, SigmaXSource, SigmaXPSource, SigmaYSou
             for i in range(len(MX)-1,-1,-1):
                 MatTempX = np.array([x, xp, dl])
                 MatTempY = np.array([y, yp, dl])
-                MatTempX = np.dot(MX[i],MatTempX)
+                MatTempX = np.dot(MX[i], MatTempX)
                 MatTempY = np.dot(MY[i], MatTempY)
             if ListObject[k][0] == 'Slit':
                 NewSourceX = NewSourceX * acceptanceSlit(MatTempX[0], ListObject[k][1], ListObject[k][3])
@@ -227,15 +232,23 @@ def propagateMatrixList(x, xp, y, yp, dl, SigmaXSource, SigmaXPSource, SigmaYSou
             del MY[0:2]
     return [NewSourceX, NewSourceY]
 
-def sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY):
-    IXXP = lambda x, xp, dl : propagateMatrixList(x, xp, 0, 0, dl, SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX, MatTabY, ListObject, bMonoX, bMonoY)[0]
-    IYYP = lambda y, yp, dl : propagateMatrixList(0, 0, y, yp, dl, SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX, MatTabY, ListObject, bMonoX, bMonoY)[1]
+
+def sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX,
+                     MatTabY, ListObject, SourceI, bMonoX, bMonoY):
+    # these are the functions of the final source, they are the ones used for integration
+    IXXP = lambda x, xp, dl: \
+    propagateMatrixList(x, xp, 0, 0, dl, SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX,
+                        MatTabY, ListObject, bMonoX, bMonoY)[0]
+    IYYP = lambda y, yp, dl: \
+    propagateMatrixList(0, 0, y, yp, dl, SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, GammaSource, MatTabX,
+                        MatTabY, ListObject, bMonoX, bMonoY)[1]
     ISigma = lambda dl : sourceLambda(dl, SigmaSLambda) * SourceI
     return IXXP,IYYP, ISigma
 
 def calculateLimits(IXXP, IYYP, ISigma):
     # We need to minimize calculation time and maximize precision and avoid empty
     # sampling. So we determine the boundaries of our gaussians with a quick algorithm.
+    # We improve this algorithm in the following functions
     IotaX = 10 ** -10
     while IXXP(IotaX, 0, 0) > 10 ** -15 * IXXP(0, 0, 0):
         IotaX = IotaX * 2
@@ -270,12 +283,17 @@ def calculateLimits(IXXP, IYYP, ISigma):
     return [IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl]
 
 def comparisonSourceBoundaries(IXXP, IYYP, ISigma, SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda):
+    # just a little function to compare the source sigmas with the integration limits
     [IotaX, IotaXp, IotaY, IotaYp, IotaXdl, IotaYdl] = calulateLimits(IXXP, IYYP, ISigma)
     print('Integration limits divided by the source Sigmas :',
           [IotaX / SigmaXSource, IotaY / SigmaYSource, IotaXp / SigmaXPSource, IotaYp / SigmaYPSource,
            IotaXdl / SigmaSLambda, IotaYdl / SigmaSLambda])
 
 def calculateBetterLimits(f, Eval, SigmaSource1, SigmaSource2, Epsilon):
+    # we take the limits calculated previously and enlarge them if needed
+    # what we do here is integrate along a line to see if our limits are big enough because in case of a 2D gaussian
+    # that makes an angle with the x-axis, the previous algorith will fail
+    # only for double integrals
     Iota1 = SigmaSource1
     Iota2 = SigmaSource2
     k = 1
@@ -286,15 +304,16 @@ def calculateBetterLimits(f, Eval, SigmaSource1, SigmaSource2, Epsilon):
             Iota2 = Iota2 * 2
             while si.quad(fPerm, -Iota2, Iota2, args=(Iota1, Eval))[0] / f(0, 0, 0) > Epsilon:
                 Iota1 = Iota1 * 2
-                k = 1
+            k = 1
         while si.quad(fPerm, -Iota2, Iota2, args=(Iota1, Eval))[0] / f(0, 0, 0) > Epsilon:
             Iota1 = Iota1 * 2
             while si.quad(f, -Iota1, Iota1, args=(Iota2, Eval))[0] / f(0, 0, 0) > Epsilon:
                 Iota2 = Iota2 * 2
-                k = 1
+            k = 1
     return Iota1, Iota2
 
 def calculateNonCenteredLimits(f, Eval, SigmaSource1, SigmaSource2, Epsilon):
+    # because sometimes our gaussians are not centered onto 0 (when one of the terms is a 10**-2 for example)
     Iota1 = 4*SigmaSource1
     Iota2 = 4*SigmaSource2
     k = 1
@@ -305,15 +324,17 @@ def calculateNonCenteredLimits(f, Eval, SigmaSource1, SigmaSource2, Epsilon):
             Iota2 = Iota2 * 2
             while si.quad(fPerm, -Iota2, Iota2, args=(Iota1, Eval))[0] / f(0, 0, Eval) > Epsilon or si.quad(fPerm, -Iota2, Iota2, args=(-Iota1, Eval))[0] / f(0, 0, Eval) > Epsilon:
                 Iota1 = Iota1 * 2
-                k = 1
+            k = 1
         while si.quad(fPerm, -Iota2, Iota2, args=(Iota1, Eval))[0] / f(0, 0, Eval) > Epsilon or si.quad(fPerm, -Iota2, Iota2, args=(-Iota1, Eval))[0] / f(0, 0, Eval) > Epsilon:
             Iota1 = Iota1 * 2
+
             while si.quad(f, -Iota1, Iota1, args=(Iota2, Eval))[0] / f(0, 0, Eval) > Epsilon or si.quad(f, -Iota1, Iota1, args=(-Iota2, Eval))[0] / f(0, 0, Eval) > Epsilon:
                 Iota2 = Iota2 * 2
-                k = 1
+            k = 1
     return Iota1, Iota2
 
 def calculateEvenBetterLimits(f, SigmaSource1, SigmaSource2, SigmaSource3, Epsilon):
+    # this is solely for 3 variable integrals
     [Iota1, Iota2] = calculateBetterLimits(f, 0, SigmaSource1, SigmaSource2, Epsilon)
     print(SigmaSource1, SigmaSource2, SigmaSource3)
     fPerm1 = lambda x, y, z : f(y, z, x)
@@ -330,6 +351,7 @@ def calculateEvenBetterLimits(f, SigmaSource1, SigmaSource2, SigmaSource3, Epsil
     return Iota1, Iota2, Iota4
 
 def cheapTripleIntegral(f, Iota1, Iota2, Iota3, NumStep, Method=1):
+    # the method to calculate triple integrals, you make an array and sum
     u = np.linspace(-Iota1, Iota1, NumStep)
     up = np.linspace(-Iota2, Iota2, NumStep)
     udl = np.linspace(-Iota3, Iota3, NumStep)
@@ -356,6 +378,8 @@ def cheapTripleIntegral(f, Iota1, Iota2, Iota3, NumStep, Method=1):
         return Matrix.sum() * (u[1] - u[0]) * (up[1] - up[0]) * (udl[1] - udl[0])
 
 def simpleIntegralDenullification(f, k, Iota):
+    # because sometimes the evaluation is too small and python thinks the integral is 0
+    # which is wrong and leads to mistakes since we need to calculate a logarithm later on
     Eval = k
     Integral = si.quad(f, -Iota, Iota, args=(0, Eval))[0]
     if Integral == 0.0:
@@ -413,6 +437,7 @@ def plotAB(IXXP, IotaX, IotaXp, NumPoints, title="XXP",xtitle="X",ytitle="XP"):
     plt.show()
 
 def plotXXP(IXXP, IotaX, IotaXp, NumPoints):
+    # NumPoints is the precision of your graph, aka the number of elements in your array
     x = np.linspace(-IotaX, IotaX, NumPoints)
     xp = np.linspace(-IotaXp, IotaXp, NumPoints)
     X = np.outer(x, np.ones_like(xp))
@@ -620,8 +645,8 @@ def beamGeoSize(IXXP,IYYP,ISigma):  # the two next functions are similar to this
 
         IyIntegrated_0 = si.nquad(IYint, [[-IotaYpBetter, IotaYpBetter], [-IotaYdlBetter, IotaYdlBetter]], args=(0,))[0]
         IyIntegrated_E2 = si.nquad(IYint, [[-IotaOffsetYp, IotaOffsetYp],[-IotaOffsetYdl, IotaOffsetYdl]], args=(YEval,))[0]
-
         print('Value of the integrals : ', IxIntegrated_0, IxIntegrated_E2, IyIntegrated_0, IyIntegrated_E2)
+
         # we now have our integrals, we just need both Sigmas
         ValueAX = IxIntegrated_0 * IyIntegrated_0
         print('ValueAX :', ValueAX)
@@ -650,24 +675,26 @@ def beamGeoSize(IXXP,IYYP,ISigma):  # the two next functions are similar to this
         IotaXpBetter = calculateBetterLimits(IXint, 0, IotaXp, IotaXdl, 10 ** -10)[0]
         IotaXdlBetter = calculateBetterLimits(IXint, 0, IotaXp, IotaXdl, 10 ** -10)[1]
         print('IotaXdlBetter is :', IotaXdlBetter, 'and IotaXpBetter is :', IotaXpBetter)
-        IotaOffsetXp = calculateNonCenteredLimits(IXint, XEval, IotaXp, IotaXdl, 10**-4)[0]
-        IotaOffsetXdl = calculateNonCenteredLimits(IXint, XEval, IotaXp, IotaXdl, 10**-4)[1]
+        IotaOffsetXp = calculateNonCenteredLimits(IXint, XEval, IotaXp, IotaXdl, 10**-8)[0]
+        IotaOffsetXdl = calculateNonCenteredLimits(IXint, XEval, IotaXp, IotaXdl, 10**-8)[1]
         print('IotaOffsetXdl is :', IotaOffsetXdl, 'and IotaOffsetXp is :', IotaOffsetXp)
 
         IxIntegrated_0 = si.nquad(IXint, [[-IotaXpBetter, IotaXpBetter], [-IotaXdlBetter, IotaXdlBetter]], args=(0,))[0]
         IxIntegrated_E2 = si.nquad(IXint, [[-IotaOffsetXp, IotaOffsetXp], [-IotaOffsetXdl, IotaOffsetXdl]], args=(XEval,))[0]
         print('Value of the integrals : ',IyIntegrated_0, IyIntegrated_E2, IxIntegrated_0, IxIntegrated_E2)
+
         #simple calculation part
         ValueAX = IxIntegrated_0 * IyIntegrated_0
-        print(ValueAX)
+        print('ValueAX :', ValueAX)
         ValueAY = ValueAX
         ValueExponentX = IyIntegrated_0 * IxIntegrated_E2
         ValueExponentY = IxIntegrated_0 * IyIntegrated_E2
+        print('ValueExponentY is :', ValueExponentY)
         SigmaX = sigmaCalc(XEval, ValueExponentX, ValueAX)
         SigmaY = sigmaCalc(YEval, ValueExponentY, ValueAY)
 
     else:
-        print("Computation time too long, DeltaLambda variation on both axis -> not possible")
+        print("Computation time too long, DeltaLambda variation on both axis -> it cannot be done")
         return 0
 
     return [SigmaX, SigmaY]
@@ -688,6 +715,7 @@ def beamAngularSize(IXXP, IYYP, ISigma):
         YpEval = doubleIntegralDenullification(IYpint, YpEval, IotaY, IotaYdl)
         IxpIntegrated_0 = si.quad(Ixp, -IotaX, IotaX, args=(0, 0))[0]
         IxpIntegrated_E6 = si.quad(Ixp, -IotaX, IotaX, args=(0, XpEval))[0]
+        print('XpEval and YpEval are :', XpEval, YpEval)
 
         IotaYBetter = calculateBetterLimits(IYpint, YpEval, IotaY, IotaYdl, 10 ** -10)[0]
         IotaYdlBetter = calculateBetterLimits(IYpint, YpEval, IotaY, IotaYdl, 10 ** -10)[1]
@@ -719,6 +747,7 @@ def beamAngularSize(IXXP, IYYP, ISigma):
         YpEval = simpleIntegralDenullification(Iyp, YpEval, IotaY)
         IypIntegrated_0 = si.quad(Iyp, -IotaY, IotaY, args=(0, 0))[0]
         IypIntegrated_E6 = si.quad(Iyp, -IotaY, IotaY, args=(0, YpEval))[0]
+        print('XEval and YEval are :', XpEval, YpEval)
 
         IotaXBetter = calculateBetterLimits(IXpint, XpEval, IotaX, IotaXdl, 10 ** -10)[0]
         IotaXdlBetter = calculateBetterLimits(IXpint, XpEval, IotaX, IotaXdl, 10 ** -10)[1]

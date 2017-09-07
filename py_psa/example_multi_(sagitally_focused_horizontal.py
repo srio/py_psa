@@ -2,10 +2,10 @@ from psa_functions_numeric import *
 from psa_functions_symbolic import *
 
 SourceI = 1e25
-SigmaXSource = 1e-1
-SigmaYSource = 1e-2
-SigmaYPSource = 10**-4
-SigmaXPSource = 3e-5
+SigmaXSource = 1e-2
+SigmaYSource = 1e-1
+SigmaYPSource = 3e-5
+SigmaXPSource = 1e-4
 GammaSource = 0
 SigmaSLambda = 1e-3
 bMonoX = 1
@@ -15,17 +15,17 @@ CoefMonoY = 1
 CoefAtten = 1
 
 # distances
-z0 = 10000
-z1 = 10000
+z0 = 32000
+z1 = 3000
 ListDistance = [z0,z1]
 
 # multi data
-WsMu0 = 2.015673*10**-2
-RML0 = 9.600000*10**-1
-RowlandMul0 = 1.000000*10**-1
-thetaMu0 = 4.500000*10**1*pi/180
-Fmu0 = 4.084337*10**-1
-DfS0 = 1.000000*10**4
+WsMu0 = 1.653743*10**-4
+RML0 = 1
+RowlandMul0 = 5000
+thetaMu0 = 0.672*pi/180
+Fmu0 = 1.556381*10**3
+DfS0 = 3.200000*10**4
 
 # object definition
 MultiHorizontal = ['MultiHorizontal', thetaMu0, RML0, RowlandMul0, WsMu0, DfS0, np.eye(3,3), matrixMultilayer(Fmu0)]
@@ -54,13 +54,16 @@ SigmaXY = beamGeoSize(IXXP,IYYP,ISigma)
 print('Beginning of angular integration')
 SigmaXPYP = beamAngularSize(IXXP, IYYP, ISigma)
 print('Beginning of flux integration')
-SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, SigmaXPSource, SigmaYPSource, SigmaXSource, SigmaYSource)
+# SigmaLambdaFlux = sigma1_MaxFluxL_FluxPhi(IXXP, IYYP, ISigma, CoefAtten, CoefMonoX, CoefMonoY)
 print('SigmaX:%g'%(SigmaXY[0]),' SigmaY:%g'%(SigmaXY[1]))
 print('SigmaXP:%g'%(SigmaXPYP[0]), 'SigmaYP:%g'%(SigmaXPYP[1]))
-print('SigmaLambda:%g'%(SigmaLambdaFlux[0]), 'Flux:%g'%(SigmaLambdaFlux[2]))
+# print('SigmaLambda:%g'%(SigmaLambdaFlux[0]), 'Flux:%g'%(SigmaLambdaFlux[2]))
 
-# Results mathematica simple propagation for z0 = 20000
-# no data
+# Results mathematica
+fluxM = 6.968*10**8
+sigmaxyM = [ 3.60202896e-03  ,1.05475151e+00]
+sigmaxpypM = [2.56712185e+00, 2.99999994e+01]
+sigmalambdaM = 9.86338640e-04
 
 #plotting section
 # def IXint(x, xp, dl):
@@ -71,7 +74,7 @@ plotXXP(IXXP, IotaX, IotaXp, 500)
 plotYYP(IYYP, IotaY, IotaYp, 500)
 # plotAnything(IYint, 0, 0, 0, 0, 1000)
 
-# nut.assert_array_almost_equal(SigmaXY, sigmaxyM, decimal=2)
-# nut.assert_array_almost_equal(SigmaXPYP, sigmaxpypM, decimal=2)
+nut.assert_array_almost_equal(SigmaXY, sigmaxyM, decimal=2)
+nut.assert_array_almost_equal(SigmaXPYP, sigmaxpypM, decimal=2)
 # nut.assert_almost_equal(SigmaLambdaFlux[0], sigmalambdaM, decimal=2)
 # nut.assert_almost_equal(SigmaLambdaFlux[2], fluxM , decimal=1)

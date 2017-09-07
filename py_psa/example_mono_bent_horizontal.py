@@ -38,6 +38,9 @@ ListObject = [MonoBentHorizontal]
 
 # MatTab construction
 [MatTabX, MatTabY] = buildMatTab(ListObject, ListDistance)
+# MatTabX = [matrixFlight(z0), matrixMonoBent(bMono0, Fc0, thetaB0), matrixFlight(z1)]
+# MatTabY = [matrixFlight(z0), np.eye(3, 3), matrixFlight(z1)]
+
 
 #function definition
 IXXP = sourceFinale(SigmaXSource, SigmaXPSource, SigmaYSource, SigmaYPSource, SigmaSLambda, GammaSource, MatTabX, MatTabY, ListObject, SourceI, bMonoX, bMonoY)[0]
@@ -60,7 +63,11 @@ def IXint(x, xp, dl):
 #     return IYYP(x, xp, dl) * ISigma(dl)
 # plotXXP(IXXP, 0.42, 5.24e-5, 500)
 # plotYYP(IYYP, 0.215, 0.0002, 500)
-plotAnything(IXint, 0, 5.62144e-05, 0.0002048576, 10**-2, 500)
+# plotAnything(IXint, 0, 2.62144e-05, 0.0002097152, 10**-2, 500)
+# plotAnything(IXint, 0, 2.62144e-05, 0.0002097152, 0, 500)
+plotAnything(IXint, 0.429496, 0, 0.0002097152, 10**-6, 500)
+plotAnything(IXint, 0.429496 , 0, 0.0002097, 0, 500)
+
 
 # Sigma calculations
 print('Beginning of geometric integration')

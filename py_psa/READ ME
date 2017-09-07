@@ -8,6 +8,7 @@ This is how every object is supposed to be written in test files :
 LensParabolicHorizontal = ['LensParabolicHorizontal', Radius0, DistBetwHoles0, Sigma0, np.eye(3), matrixCompLensPara(F0)]
 LensParabolicVertical = ['LensParabolicVertical', Radius0, DistBetwHoles0, Sigma0,  matrixCompLensPara(F0), np.eye(3)]
 LensParabolic2D = ['LensParabolic2D', Radius0, DistBetwHoles0, Sigma0, matrixCompLensPara(F0), matrixCompLensPara(F0)]
+LensIdeal2D = ['LensIdeal2D', matrixCompLensPara(F0), matrixCompLensPara(F0)]
 
 *Mirrors*
 Mirror = ['Mirror', np.eye(3), matrixMirror(IncAng0, Sigma0, Lambda0, Delta0, Fm0, S)]

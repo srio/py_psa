@@ -58,6 +58,15 @@ print('SigmaX:%g'%(SigmaXY[0]),' SigmaY:%g'%(SigmaXY[1]))
 print('SigmaXP:%g'%(SigmaXPYP[0]), 'SigmaYP:%g'%(SigmaXPYP[1]))
 # print('SigmaLambda:%g'%(SigmaLambdaFlux[0]), 'Flux:%g'%(SigmaLambdaFlux[2]))
 
+#plotting section
+# def IXint(x, xp, dl):
+#     return IXXP(x, xp, dl) * ISigma(dl)
+# def IYint(x, xp, dl):
+#     return IYYP(x, xp, dl) * ISigma(dl)
+plotXXP(IXXP, IotaX, IotaXp, 500)
+plotYYP(IYYP, IotaY, IotaYp, 500)
+# plotAnything(IYint, 0, IotaYp, IotaYdl, 0, 500)
+
 # # Results mathematica single slit
 fluxM = 4.24833 * 10 ** 12
 sigmaxyM = [6.66564735e-01, 2.18549439]

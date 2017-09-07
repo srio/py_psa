@@ -32,7 +32,7 @@ SX = 1
 SY = 1
 
 # object definition
-MirrorToroidal= ['MirrorToroidal', IncAng0, SigmaX0, SigmaY0, Lambda0, DeltaX0, DeltaY0, FmX0, FmY0, SX, SY, matrixMirror(IncAng0, SigmaY0, Lambda0, DeltaY0, FmY0, SY), matrixMirror(IncAng0, SigmaX0, Lambda0, DeltaX0, FmX0, SX)]
+MirrorToroidal= ['Mirror', IncAng0, SigmaX0, SigmaY0, Lambda0, DeltaX0, DeltaY0, FmX0, FmY0, SX, SY, matrixMirror(IncAng0, SigmaY0, Lambda0, DeltaY0, FmY0, SY), matrixMirror(IncAng0, SigmaX0, Lambda0, DeltaX0, FmX0, SX)]
 ListObject = [MirrorToroidal]
 
 # MatTab construction
