@@ -11,7 +11,7 @@ https://doi.org/10.1364/AO.47.00E116
 - J.S. Pedersen and C. Riekel, "Resolution Function and Flux at the Sample for Small-Angle X-
 ray Scattering Calculated in Position-Angle-Wavelength Space, Journal of Applied Crystallography
 24, 893-909 (1991)
-https://doi.org/10.1107/S002188989100369
+https://doi.org/10.1107/S0021889891003692
 
 This code is a python implementation of the original Mathematica+TclTk code. 
 
